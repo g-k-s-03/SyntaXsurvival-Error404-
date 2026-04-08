@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choose Role — BloodConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 5: "feat: role selection screen with donor and hospital cards"
+    Author: Person 2 (Frontend – Donor)
+    Date: Hour 4-5
+  ============================================================ -->
+
+  <style>
+    .role-page {
+      min-height: 100vh; padding-top: var(--nav-h);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .role-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 80%);
+    }
+    .role-orb {
+      position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(200,16,46,0.13), transparent 70%);
+      top: -180px; left: 50%; transform: translateX(-50%);
+    }
+    .role-wrap {
+      position: relative; z-index: 2; width: 100%; max-width: 900px;
+      padding: 3rem 2rem; text-align: center;
+    }
+    .role-eyebrow {
+      font-family: var(--font-mono); font-size: 0.72rem;
+      color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 1rem;
+    }
+    .role-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; color: var(--text); margin-bottom: 0.75rem; }
+    .role-title em { font-style: italic; color: var(--red-bright); }
+    .role-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 3rem; }
+
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    @media(max-width:700px){ .role-grid { grid-template-columns: 1fr; } }
+
+    .role-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem 1.5rem;
+      cursor: pointer; transition: all 0.25s var(--ease-expo);
+      text-align: left; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .role-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(200,16,46,0.05), transparent 60%);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .role-card:hover { border-color: var(--border-red); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(200,16,46,0.15); }
+    .role-card:hover::before { opacity: 1; }
+    .role-card.selected { border-color: var(--red-bright); background: rgba(200,16,46,0.06); }
+    .role-card.selected::before { opacity: 1; }
+
+    .rc-num {
+      font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+    .rc-icon {
+      font-size: 2.4rem;
+      width: 60px; height: 60px; border-radius: 14px;
+      background: rgba(200,16,46,0.08); border: 1px solid var(--border-red);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .rc-name { font-size: 1.3rem; font-weight: 700; color: var(--text); font-family: var(--font-serif); }
+    .rc-desc { font-size: 0.83rem; color: var(--text-dim); line-height: 1.6; }
+    .rc-features { display: flex; flex-direction: column; gap: 6px; margin-top: 0.5rem; }
+    .rc-feat {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+    .rc-feat::before { content: '—'; color: var(--red-dim); font-family: var(--font-mono); }
+    .rc-cta {
+      margin-top: auto; font-size: 0.83rem; font-weight: 600;
+      color: var(--red-bright); font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+
+    /* Highlight the hospital card */
+    .role-card:nth-child(2) .rc-icon { font-size: 2.2rem; }
+
+    .role-note {
+      margin-top: 2rem; font-size: 0.76rem; color: var(--text-muted);
+      font-family: var(--font-mono); letter-spacing: 0.04em;
+    }
+    .role-note strong { color: var(--orange); }
+  </style>
+</head>
+<body>
+
+  <div class="noise-overlay"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-drop">🩸</span>
+        <span>Blood<em>Connect</em></span>
+      </a>
+      <div class="nav-right">
+        <a href="login.html" class="btn-nav-outline">← Back</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="role-page">
+    <div class="role-bg"></div>
+    <div class="role-orb"></div>
+
+    <div class="role-wrap">
+      <p class="role-eyebrow">— Step 1 of 2 · Choose your role</p>
+      <h1 class="role-title">I am a<br /><em>...</em></h1>
+      <p class="role-sub">Select your role. This cannot be changed after registration.</p>
+
+      <div class="role-grid">
+
+        <!-- Donor -->
+        <div class="role-card" onclick="selectRole('donor', 'donor-register.html')" id="card-donor">
+          <span class="rc-num">01</span>
+          <div class="rc-icon">🩸</div>
+          <div class="rc-name">Donor</div>
+          <p class="rc-desc">Register your blood group and receive SMS alerts when nearby hospitals need your blood type.</p>
+          <div class="rc-features">
+            <span class="rc-feat">Availability toggle</span>
+            <span class="rc-feat">Donation history & badge</span>
+            <span class="rc-feat">56-day auto lock</span>
+            <span class="rc-feat">Nearby request radar</span>
+          </div>
+          <span class="rc-cta">Register as Donor →</span>
+        </div>
+
+        <!-- Hospital -->
+        <div class="role-card" onclick="selectRole('hospital', 'hospital-register.html')" id="card-hospital">
+          <span class="rc-num">02</span>
+          <div class="rc-icon">🏥</div>
+          <div class="rc-name">Hospital</div>
+          <p class="rc-desc">Submit emergency or scheduled blood requests. Track status in real time. View matched donors on map.</p>
+          <div class="rc-features">
+            <span class="rc-feat">Emergency + scheduled requests</span>
+            <span class="rc-feat">Real-time status tracker</span>
+            <span class="rc-feat">Donor map view</span>
+            <span class="rc-feat">Cancel & fulfillment flow</span>
+          </div>
+          <span class="rc-cta">Register Hospital →</span>
+        </div>
+
+        <!-- Admin -->
+        <div class="role-card" onclick="selectRole('admin', 'admin.html')" id="card-admin">
+          <span class="rc-num">03</span>
+          <div class="rc-icon">⚙️</div>
+          <div class="rc-name">Admin</div>
+          <p class="rc-desc">City-wide operations dashboard. Manage all donors, monitor requests, view shortage stats and broadcast alerts.</p>
+          <div class="rc-features">
+            <span class="rc-feat">Live city request map</span>
+            <span class="rc-feat">Donor heatmap</span>
+            <span class="rc-feat">Blood shortage stats</span>
+            <span class="rc-feat">Emergency broadcast</span>
+          </div>
+          <span class="rc-cta">Admin Panel →</span>
+        </div>
+      </div>
+
+      <p class="role-note"><strong>⚠ Role lock:</strong> Role cannot be changed after account creation for security.</p>
+    </div>
+  </div>
+
+  <script>
+    // Commit 5: role selection — highlight card, redirect to register
+    function selectRole(role, dest) {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('card-' + role).classList.add('selected');
+      localStorage.setItem('bc_role', role);
+      setTimeout(() => { window.location.href = dest; }, 400);
+    }
+  </script>
+</body>
+</html>

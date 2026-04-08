@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map View — BloodConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 17: "feat: map view page layout with donor list sidebar"
+    Author: Person 3 (Frontend – Maps)
+    Date: Hour 24-26
+
+    Commit 18: "feat: Google Maps iframe embed + donor pins data"
+    Author: Person 3 (Frontend – Maps)
+    Date: Hour 26-27
+
+    Commit 19: "feat: distance labels and Google Maps link for navigation"
+    Author: Person 3 (Frontend – Maps)
+    Date: Hour 27
+  ============================================================ -->
+
+  <style>
+    body { overflow: hidden; }
+    .map-page { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - var(--nav-h)); padding-top: var(--nav-h); }
+
+    /* Sidebar */
+    .map-sidebar {
+      background: var(--ink-2); border-right: 1px solid var(--border);
+      overflow-y: auto; padding: 1.5rem 0;
+    }
+    .ms-head {
+      padding: 0 1.25rem 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;
+    }
+    .ms-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .ms-sub   { font-size: 0.75rem; color: var(--text-muted); }
+
+    .ms-filter {
+      display: flex; gap: 6px; padding: 0 1.25rem; margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .filter-chip {
+      padding: 5px 12px; border-radius: 40px; font-size: 0.72rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--ink-3); color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s; font-family: var(--font-mono);
+    }
+    .filter-chip.active, .filter-chip:hover {
+      border-color: var(--border-red); color: var(--red-bright);
+      background: rgba(200,16,46,0.08);
+    }
+
+    .donor-pin-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 1.25rem; cursor: pointer; transition: background 0.2s;
+    }
+    .donor-pin-item:hover { background: rgba(255,255,255,0.02); }
+    .donor-pin-item.selected { background: rgba(200,16,46,0.06); }
+    .pin-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .pin-dot.available { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .pin-dot.busy      { background: var(--orange); }
+    .pin-dot.offline   { background: var(--text-muted); }
+    .pin-body { flex: 1; }
+    .pin-name { font-size: 0.83rem; font-weight: 600; color: var(--text); }
+    .pin-meta { font-size: 0.72rem; color: var(--text-muted); }
+    .pin-dist { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
+
+    .section-divider { padding: 0.5rem 1.25rem; }
+    .section-divider span { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; font-family: var(--font-mono); }
+
+    /* Map container */
+    .map-container { position: relative; background: var(--ink-3); }
+    .map-placeholder {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1rem;
+      background: #0a0f18;
+    }
+
+    /* Fake map grid */
+    .fake-map {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.008) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.008) 1px, transparent 1px);
+      background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+      background-color: #0a0f18;
+    }
+    /* Road-like lines */
+    .fake-map::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(transparent 49%, rgba(255,255,255,0.035) 49%, rgba(255,255,255,0.035) 51%, transparent 51%),
+        linear-gradient(90deg, transparent 29%, rgba(255,255,255,0.035) 29%, rgba(255,255,255,0.035) 31%, transparent 31%),
+        linear-gradient(90deg, transparent 69%, rgba(255,255,255,0.025) 69%, rgba(255,255,255,0.025) 71%, transparent 71%),
+        linear-gradient(transparent 74%, rgba(255,255,255,0.025) 74%, rgba(255,255,255,0.025) 76%, transparent 76%);
+    }
+
+    /* Map overlay elements */
+    .map-overlay { position: absolute; inset: 0; }
+
+    /* Hospital marker */
+    .map-marker {
+      position: absolute; transform: translate(-50%, -100%);
+      display: flex; flex-direction: column; align-items: center; cursor: pointer;
+    }
+    .marker-icon {
+      width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .marker-icon-inner { transform: rotate(45deg); }
+    .marker-label {
+      margin-top: 4px; background: rgba(6,10,14,0.9);
+      border: 1px solid var(--border); border-radius: 4px;
+      padding: 3px 7px; font-size: 0.65rem; white-space: nowrap; color: var(--text);
+    }
+    .marker-hospital .marker-icon { background: var(--red); border: 2px solid var(--red-bright); box-shadow: 0 0 16px rgba(200,16,46,0.6); }
+    .marker-donor .marker-icon { background: rgba(29,185,84,0.3); border: 2px solid var(--green); box-shadow: 0 0 10px rgba(29,185,84,0.4); }
+
+    /* Radius circle */
+    .radius-circle {
+      position: absolute; border-radius: 50%;
+      border: 1px dashed rgba(200,16,46,0.25);
+      transform: translate(-50%, -50%); pointer-events: none;
+    }
+
+    /* Map top bar */
+    .map-topbar {
+      position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .map-search {
+      flex: 1; max-width: 280px; padding: 10px 14px;
+      background: rgba(6,10,14,0.9); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-sans);
+      font-size: 0.85rem; outline: none;
+    }
+    .map-search:focus { border-color: var(--red); }
+    .map-search::placeholder { color: var(--text-muted); }
+    .map-badge {
+      background: rgba(6,10,14,0.9); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 14px;
+      font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Selected donor popup */
+    .donor-popup {
+      position: absolute; z-index: 20; background: var(--ink-2);
+      border: 1px solid var(--border-red); border-radius: var(--radius);
+      padding: 1rem 1.2rem; min-width: 200px; pointer-events: none;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .donor-popup.show { opacity: 1; }
+
+    @media(max-width: 768px) {
+      body { overflow: auto; }
+      .map-page { grid-template-columns: 1fr; height: auto; }
+      .map-container { height: 50vh; }
+      .map-sidebar { height: auto; overflow: visible; }
+    }
+
+    .legend {
+      position: absolute; bottom: 16px; right: 16px; z-index: 10;
+      background: rgba(6,10,14,0.9); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .leg-item { display: flex; align-items: center; gap: 7px; font-size: 0.72rem; color: var(--text-muted); }
+    .leg-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div class="noise-overlay"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Connect</em></span></a>
+      <div class="nav-right">
+        <a href="hospital-dashboard.html" class="btn-nav-outline">← Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="map-page">
+
+    <!-- Sidebar (Commit 17) -->
+    <div class="map-sidebar">
+      <div class="ms-head">
+        <div class="ms-title">Donors Near You</div>
+        <div class="ms-sub" id="donorCount">23 donors within 10 km · 18 available</div>
+      </div>
+
+      <div class="ms-filter">
+        <div class="filter-chip active" onclick="filterMap('all', this)">All</div>
+        <div class="filter-chip" onclick="filterMap('available', this)">Available</div>
+        <div class="filter-chip" onclick="filterMap('critical', this)">O−</div>
+        <div class="filter-chip" onclick="filterMap('nearby', this)">&lt;2km</div>
+      </div>
+
+      <!-- Active request highlight -->
+      <div style="margin: 0 1.25rem 1rem; padding: 10px 12px; background: rgba(200,16,46,0.06); border: 1px solid var(--border-red); border-radius: var(--radius-sm);">
+        <div style="font-size:0.72rem;color:var(--red-bright);font-family:var(--font-mono);font-weight:600;margin-bottom:3px;">🚨 ACTIVE REQUEST</div>
+        <div style="font-size:0.82rem;color:var(--text);">O− · 2 units · Kamla Raja</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);">Matching radius: 5 km</div>
+      </div>
+
+      <div class="section-divider"><span>Available donors</span></div>
+      <div id="donorList">
+        <!-- Dynamically generated -->
+      </div>
+    </div>
+
+    <!-- Map container (Commit 18) -->
+    <div class="map-container">
+      <div class="fake-map"></div>
+      <div class="map-overlay">
+
+        <!-- Top bar -->
+        <div class="map-topbar">
+          <input class="map-search" placeholder="🔍 Search area or blood group..." />
+          <div class="map-badge"><span class="status-dot online"></span> Live · 23 donors</div>
+          <div class="map-badge">📍 Gwalior City</div>
+        </div>
+
+        <!-- Hospital marker -->
+        <div class="map-marker marker-hospital" style="left:48%;top:48%;" onclick="showPopup('Kamla Raja Hospital', 'Request active', 'Hospital', 0)">
+          <div class="marker-icon"><span class="marker-icon-inner">🏥</span></div>
+          <div class="marker-label">Kamla Raja Hospital ← YOU</div>
+        </div>
+
+        <!-- Radius circles -->
+        <div class="radius-circle" style="width:140px;height:140px;left:48%;top:48%;border-color:rgba(200,16,46,0.3);"></div>
+        <div class="radius-circle" style="width:260px;height:260px;left:48%;top:48%;border-color:rgba(200,16,46,0.15);"></div>
+        <div class="radius-circle" style="width:380px;height:380px;left:48%;top:48%;border-color:rgba(200,16,46,0.06);"></div>
+
+        <!-- Donor markers (Commit 19) -->
+        <div class="map-marker marker-donor" style="left:38%;top:38%;" onclick="showPopup('Rahul S.', 'O+ · 0.8 km · Available', 'Donor', 0.8)">
+          <div class="marker-icon"><span class="marker-icon-inner" style="font-size:0.75rem;font-family:var(--font-mono);color:var(--green);">RS</span></div>
+          <div class="marker-label" style="color:var(--green);">O+ · 0.8 km</div>
+        </div>
+        <div class="map-marker marker-donor" style="left:55%;top:35%;" onclick="showPopup('Priya K.', 'O− · 1.4 km · Available', 'Donor', 1.4)">
+          <div class="marker-icon"><span class="marker-icon-inner" style="font-size:0.75rem;font-family:var(--font-mono);color:var(--green);">PK</span></div>
+          <div class="marker-label" style="color:var(--green);">O− · 1.4 km</div>
+        </div>
+        <div class="map-marker marker-donor" style="left:60%;top:55%;" onclick="showPopup('Amit V.', 'A+ · 2.1 km · Available', 'Donor', 2.1)">
+          <div class="marker-icon"><span class="marker-icon-inner" style="font-size:0.75rem;font-family:var(--font-mono);color:var(--green);">AV</span></div>
+          <div class="marker-label">A+ · 2.1 km</div>
+        </div>
+        <div class="map-marker marker-donor" style="left:32%;top:60%;" onclick="showPopup('Sunita R.', 'B+ · 3.4 km · Available', 'Donor', 3.4)">
+          <div class="marker-icon"><span class="marker-icon-inner" style="font-size:0.75rem;font-family:var(--font-mono);color:var(--green);">SR</span></div>
+          <div class="marker-label">B+ · 3.4 km</div>
+        </div>
+        <div class="map-marker marker-donor" style="left:70%;top:42%;" onclick="showPopup('Dev K.', 'AB+ · 4.8 km · Offline', 'Donor', 4.8)">
+          <div class="marker-icon" style="background:rgba(90,100,114,0.3);border-color:var(--text-muted);box-shadow:none;"><span class="marker-icon-inner" style="font-size:0.75rem;font-family:var(--font-mono);color:var(--text-muted);">DK</span></div>
+          <div class="marker-label">AB+ · 4.8 km · Offline</div>
+        </div>
+
+        <!-- Popup -->
+        <div class="donor-popup" id="popup" style="left:48%;top:30%;">
+          <div id="popupName" style="font-weight:700;color:var(--text);margin-bottom:4px;"></div>
+          <div id="popupMeta" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;"></div>
+          <a id="mapsLink" href="#" target="_blank" class="btn btn-primary btn-sm" style="font-size:0.75rem;">🗺 Open in Google Maps</a>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>Available donor</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--text-muted);"></div>Offline donor</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--red-bright);box-shadow:0 0 6px var(--red-bright);"></div>Hospital / Request</div>
+          <div style="margin-top:4px;padding-top:6px;border-top:1px solid var(--border);">
+            <div class="leg-item" style="font-family:var(--font-mono);">— 5 km radius</div>
+            <div class="leg-item" style="font-family:var(--font-mono);">— — 10 km radius</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    // Commit 17: populate donor list sidebar
+    const donors = [
+      { init:'RS', name:'Rahul S.',  blood:'O+', dist:0.8, status:'available', area:'Lashkar' },
+      { init:'PK', name:'Priya K.',  blood:'O−', dist:1.4, status:'available', area:'City Centre' },
+      { init:'AV', name:'Amit V.',   blood:'A+', dist:2.1, status:'available', area:'Morar' },
+      { init:'SR', name:'Sunita R.', blood:'B+', dist:3.4, status:'available', area:'Thatipur' },
+      { init:'MK', name:'Mohit K.',  blood:'AB+',dist:3.9, status:'available', area:'Hazira' },
+      { init:'DK', name:'Dev K.',    blood:'AB+',dist:4.8, status:'offline',   area:'Gwalior Fort' },
+      { init:'NK', name:'Neha K.',   blood:'A−', dist:5.2, status:'available', area:'Padav' },
+      { init:'RG', name:'Raj G.',    blood:'B−', dist:6.1, status:'available', area:'Gola Ka Mandir' },
+    ];
+
+    const list = document.getElementById('donorList');
+    function renderDonors(filter) {
+      list.innerHTML = '';
+      donors.filter(d => {
+        if (filter === 'available') return d.status === 'available';
+        if (filter === 'critical')  return d.blood === 'O−' || d.blood === 'O+';
+        if (filter === 'nearby')    return d.dist < 2;
+        return true;
+      }).forEach(d => {
+        list.innerHTML += `
+          <div class="donor-pin-item" onclick="showPopup('${d.name}','${d.blood} · ${d.dist} km · ${d.status}','Donor',${d.dist})">
+            <div class="pin-dot ${d.status}"></div>
+            <div class="pin-body">
+              <div class="pin-name">${d.name} <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--red-bright);">${d.blood}</span></div>
+              <div class="pin-meta">${d.area} · ${d.status}</div>
+            </div>
+            <div class="pin-dist">${d.dist} km</div>
+          </div>`;
+      });
+    }
+    renderDonors('all');
+
+    function filterMap(f, el) {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderDonors(f);
+    }
+
+    // Commit 19: popup
+    function showPopup(name, meta, type, dist) {
+      const p = document.getElementById('popup');
+      document.getElementById('popupName').textContent = (type === 'Donor' ? '👤 ' : '🏥 ') + name;
+      document.getElementById('popupMeta').textContent = meta;
+      // Commit 19: link to Google Maps
+      const query = encodeURIComponent(name + ' Gwalior');
+      document.getElementById('mapsLink').href = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      p.classList.add('show');
+      p.style.pointerEvents = 'all';
+      setTimeout(() => { p.classList.remove('show'); p.style.pointerEvents = 'none'; }, 4000);
+    }
+
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+      document.getElementById('toasts').appendChild(t); setTimeout(() => t.remove(), 3500);
+    }
+  </script>
+</body>
+</html>
