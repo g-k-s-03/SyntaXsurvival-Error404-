@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink - Blood Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash" class="active">
+    <h1>LifeLink ❤️</h1>
+    <p>Saving Lives Faster</p>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="container">
+    <h2>Login</h2>
+    <input type="text" id="phone" placeholder="Enter phone number">
+    <button onclick="sendOTP()">Send OTP</button>
+</div>
+
+<!-- OTP SCREEN -->
+<div id="otpScreen" class="container">
+    <h2>Enter OTP</h2>
+    <input type="text" id="otp" placeholder="6-digit OTP">
+    <button onclick="verifyOTP()">Verify</button>
+</div>
+
+<!-- ROLE SELECTION -->
+<div id="roleScreen" class="container">
+    <h2>Select Role</h2>
+    <button class="role-btn" onclick="setRole('donor')">I am a Donor</button>
+    <button class="role-btn" onclick="setRole('patient')">I am a Hospital/Patient</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="container">
+    <h2>Dashboard</h2>
+    <p id="welcome"></p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
