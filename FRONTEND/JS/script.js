@@ -5,7 +5,7 @@ const state = {
   otpAttempts: 0,
   timerInterval: null,
   timerSeconds: 60,
-  // Demo: returning users (L7)
+
   knownUsers: {
     '9999999999': { name: 'Rahul Sharma', bloodGroup: 'A+', role: 'donor', donations: 3, lastActive: '2 days ago' },
     '8888888888': { name: 'City Hospital', bloodGroup: null, role: 'hospital', lastActive: '5 hours ago' },
