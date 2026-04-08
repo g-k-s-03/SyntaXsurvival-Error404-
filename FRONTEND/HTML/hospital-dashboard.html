@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Dashboard — BloodBond</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 14: "feat: hospital dashboard — active requests list + status tracker"
+    Author: Person 3 (Frontend – Maps)
+    Date: Hour 18-20
+
+    Commit 15: "feat: request blood form with urgency level and units"
+    Author: Person 3 (Frontend – Maps)
+    Date: Hour 20-21
+
+    Commit 16: "feat: real-time status tracker — Pending > Matched > Confirmed > Fulfilled"
+    Author: Person 1 (Backend Lead)
+    Date: Hour 21
+  ============================================================ -->
+
+  <style>
+    /* Request modal overlay */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+      padding: 1rem;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--ink-2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; width: 100%; max-width: 520px;
+      transform: scale(0.95); transition: transform 0.3s var(--ease-expo);
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-title { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 1.5rem; }
+    .modal-close {
+      float: right; background: none; border: none; color: var(--text-muted);
+      font-size: 1.2rem; cursor: pointer; margin-top: -4px;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* Urgency selector */
+    .urgency-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+    .urgency-opt {
+      padding: 12px; border-radius: var(--radius-sm); text-align: center; cursor: pointer;
+      border: 1px solid var(--border); background: var(--ink-3);
+      font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .urgency-opt span:first-child { font-size: 1.2rem; }
+    .urgency-opt.critical.selected { border-color: var(--red-bright); background: rgba(200,16,46,0.12); color: var(--red-bright); }
+    .urgency-opt.urgent.selected   { border-color: var(--orange); background: rgba(245,158,11,0.1); color: var(--orange); }
+    .urgency-opt.normal.selected   { border-color: var(--blue); background: rgba(59,130,246,0.1); color: var(--blue); }
+    .urgency-opt:hover { border-color: var(--border-red); }
+
+    /* Blood group compact select */
+    .blood-select-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .blood-chip {
+      padding: 6px 14px; border-radius: 40px;
+      font-family: var(--font-serif); font-size: 0.88rem; font-weight: 700;
+      border: 1px solid var(--border); background: var(--ink-3); color: var(--text-dim);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .blood-chip:hover { border-color: var(--border-red); color: var(--text); }
+    .blood-chip.selected { background: rgba(200,16,46,0.12); border-color: var(--red-bright); color: var(--red-bright); }
+
+    /* Units slider */
+    .units-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+    .units-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--ink-3); color: var(--text); font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color 0.2s;
+    }
+    .units-btn:hover { border-color: var(--border-red); }
+    .units-val { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--text); min-width: 24px; text-align: center; }
+
+    /* Status tracker */
+    .status-track {
+      display: flex; gap: 0; margin: 0.75rem 0; align-items: center;
+    }
+    .st-step {
+      flex: 1; text-align: center; position: relative;
+    }
+    .st-dot {
+      width: 24px; height: 24px; border-radius: 50%; margin: 0 auto 4px;
+      border: 2px solid var(--border); background: var(--ink-3);
+      font-size: 0.65rem; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); color: var(--text-muted); transition: all 0.4s;
+    }
+    .st-dot.done   { background: rgba(29,185,84,0.15); border-color: rgba(29,185,84,0.5); color: var(--green); }
+    .st-dot.active { background: rgba(200,16,46,0.15); border-color: var(--red); color: var(--red-bright); animation: activePulse 1.5s infinite; }
+    @keyframes activePulse { 0%,100%{box-shadow:0 0 0 0 rgba(200,16,46,0.4)} 50%{box-shadow:0 0 0 5px rgba(200,16,46,0)} }
+    .st-label { font-size: 0.65rem; color: var(--text-muted); }
+    .st-line { flex: 1; height: 1px; background: var(--border); margin-top: -14px; z-index: -1; max-width: 40px; }
+
+    /* Donor matches */
+    .donor-match {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.02); margin-bottom: 8px;
+      border: 1px solid var(--border); transition: border-color 0.2s;
+    }
+    .donor-match:hover { border-color: var(--border-red); }
+    .dm-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(200,16,46,0.1); border: 1px solid var(--border-red);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif); font-weight: 700; font-size: 0.85rem; color: var(--red-bright);
+    }
+    .dm-info { flex: 1; }
+    .dm-name { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+    .dm-meta { font-size: 0.73rem; color: var(--text-muted); margin-top: 1px; }
+    .dm-dist { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+
+    .dash-section { display: none; }
+    .dash-section.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="noise-overlay"></div>
+
+  <!-- Request Modal -->
+  <div class="modal-overlay" id="reqModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title">🩸 Request Blood</div>
+
+      <div class="form-group">
+        <label class="form-label">Blood Group <span class="req">*</span></label>
+        <div class="blood-select-row">
+          <div class="blood-chip" onclick="selBlood('A+')">A+</div>
+          <div class="blood-chip" onclick="selBlood('A-')">A−</div>
+          <div class="blood-chip" onclick="selBlood('B+')">B+</div>
+          <div class="blood-chip" onclick="selBlood('B-')">B−</div>
+          <div class="blood-chip" onclick="selBlood('AB+')">AB+</div>
+          <div class="blood-chip" onclick="selBlood('AB-')">AB−</div>
+          <div class="blood-chip" onclick="selBlood('O+')">O+</div>
+          <div class="blood-chip" onclick="selBlood('O-')">O−</div>
+        </div>
+        <input type="hidden" id="reqBlood" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Urgency Level <span class="req">*</span></label>
+        <div class="urgency-grid">
+          <div class="urgency-opt critical" onclick="selUrgency('critical', this)"><span>🚨</span>Critical</div>
+          <div class="urgency-opt urgent" onclick="selUrgency('urgent', this)"><span>⚠️</span>Urgent</div>
+          <div class="urgency-opt normal" onclick="selUrgency('normal', this)"><span>📋</span>Normal</div>
+        </div>
+        <input type="hidden" id="reqUrgency" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Units Required <span class="req">*</span></label>
+        <div class="units-row">
+          <button class="units-btn" onclick="changeUnits(-1)">−</button>
+          <div class="units-val" id="unitsVal">1</div>
+          <button class="units-btn" onclick="changeUnits(1)">+</button>
+          <span style="font-size:0.78rem;color:var(--text-muted);">unit(s) of blood</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Location</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" class="form-control" id="reqLoc" value="Kamla Raja Hospital, Lashkar" style="flex:1;" />
+          <button style="padding:0 14px;border-radius:var(--radius-sm);background:var(--ink-3);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-size:0.78rem;" onclick="document.getElementById('reqLoc').value='Auto-detected: Lashkar, Gwalior'">📍</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="submitRequest()" style="margin-top:0.5rem;">
+        🚀 Submit Request — Alert Top 3 Donors
+      </button>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Bond</em></span></a>
+      <div class="nav-right">
+        <button class="btn-nav" onclick="openModal()">+ Request Blood</button>
+        <button class="btn-nav-outline" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="dash-layout">
+
+      <!-- Sidebar -->
+      <aside class="dash-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Hospital</div>
+          <div class="sidebar-item active" onclick="showSection('active')"><span class="si-icon">📋</span> Active Requests</div>
+          <div class="sidebar-item" onclick="showSection('history')"><span class="si-icon">🗂</span> Request History</div>
+          <div class="sidebar-item" onclick="showSection('map')"><span class="si-icon">🗺</span> Map View</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Quick</div>
+          <div class="sidebar-item" onclick="openModal()"><span class="si-icon">🩸</span> Request Blood</div>
+          <div class="sidebar-item" onclick="logout()"><span class="si-icon">🚪</span> Logout</div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="dash-main">
+
+        <div class="stats-row" data-reveal>
+          <div class="stat-card">
+            <div class="stat-card-label">Active Requests</div>
+            <div class="stat-card-val" id="activeCount">2</div>
+            <div class="stat-card-sub">Currently pending</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Fulfilled (30d)</div>
+            <div class="stat-card-val" style="color:var(--green);">14</div>
+            <div class="stat-card-sub">94% success rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Avg Match Time</div>
+            <div class="stat-card-val">4.2<span style="font-size:1rem;">m</span></div>
+            <div class="stat-card-sub">Last 30 days</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Donors Nearby</div>
+            <div class="stat-card-val">23</div>
+            <div class="stat-card-sub">Within 10 km</div>
+          </div>
+        </div>
+
+        <!-- ACTIVE REQUESTS (Commit 14) -->
+        <div class="dash-section active" id="section-active">
+
+          <div class="sect-head" data-reveal data-reveal-delay="1">
+            <h3>Active Requests</h3>
+            <button class="btn btn-primary btn-sm" onclick="openModal()">+ New Request</button>
+          </div>
+
+          <!-- Request 1: Matched -->
+          <div class="card" style="margin-bottom:1.2rem;" data-reveal data-reveal-delay="1">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="blood-pill">O−</div>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;color:var(--text);">2 units · O− Blood</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);">Submitted 2 mins ago · REQ-2024-001</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span class="badge badge-critical">CRITICAL</span>
+                <button class="btn btn-ghost btn-sm" onclick="cancelReq(this)" style="color:var(--text-muted);">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Status tracker (Commit 16) -->
+            <div class="status-track">
+              <div class="st-step"><div class="st-dot done">✓</div><div class="st-label">Submitted</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot done">✓</div><div class="st-label">Matched</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot active">•</div><div class="st-label">Alerted</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot">4</div><div class="st-label">Confirmed</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot">5</div><div class="st-label">Fulfilled</div></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Matched donors — 3 alerted simultaneously</div>
+            <div>
+              <div class="donor-match">
+                <div class="dm-avatar">RS</div>
+                <div class="dm-info">
+                  <div class="dm-name">Rahul S. <span class="badge badge-success" style="font-size:0.65rem;margin-left:4px;">O+</span></div>
+                  <div class="dm-meta">Lashkar · Last donated: 68 days ago · Verified ✓</div>
+                </div>
+                <div class="dm-dist">0.8 km</div>
+                <span class="badge badge-urgent">Alerted</span>
+              </div>
+              <div class="donor-match">
+                <div class="dm-avatar">PK</div>
+                <div class="dm-info">
+                  <div class="dm-name">Priya K. <span class="badge badge-success" style="font-size:0.65rem;margin-left:4px;">O−</span></div>
+                  <div class="dm-meta">Morar · Last donated: 90 days ago · Verified ✓</div>
+                </div>
+                <div class="dm-dist">1.4 km</div>
+                <span class="badge badge-urgent">Alerted</span>
+              </div>
+              <div class="donor-match">
+                <div class="dm-avatar">AV</div>
+                <div class="dm-info">
+                  <div class="dm-name">Amit V. <span class="badge badge-success" style="font-size:0.65rem;margin-left:4px;">O+</span></div>
+                  <div class="dm-meta">City Centre · Last donated: 120 days ago · Verified ✓</div>
+                </div>
+                <div class="dm-dist">2.1 km</div>
+                <span class="badge badge-muted">Pending</span>
+              </div>
+            </div>
+
+            <div style="margin-top:1rem;font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);">
+              ⏱ Auto-escalate to next batch in <span id="escalateTimer" style="color:var(--orange);font-weight:600;">2:18</span>
+            </div>
+          </div>
+
+          <!-- Request 2: Pending -->
+          <div class="card" data-reveal data-reveal-delay="2">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="blood-pill">B+</div>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;color:var(--text);">1 unit · B+ Blood</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);">Submitted 10 mins ago · REQ-2024-002</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span class="badge badge-normal">NORMAL</span>
+                <button class="btn btn-ghost btn-sm" style="color:var(--green);" onclick="fulfillReq(this)">Mark Fulfilled</button>
+                <button class="btn btn-ghost btn-sm" onclick="cancelReq(this)" style="color:var(--text-muted);">Cancel</button>
+              </div>
+            </div>
+            <div class="status-track">
+              <div class="st-step"><div class="st-dot done">✓</div><div class="st-label">Submitted</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot active">•</div><div class="st-label">Matched</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot">3</div><div class="st-label">Alerted</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot">4</div><div class="st-label">Confirmed</div></div>
+              <div class="st-line"></div>
+              <div class="st-step"><div class="st-dot">5</div><div class="st-label">Fulfilled</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="dash-section" id="section-history">
+          <div class="sect-head"><h3>Request History</h3></div>
+          <div class="card">
+            <table class="hist-table">
+              <thead><tr><th>Date</th><th>Blood</th><th>Units</th><th>Urgency</th><th>Time to Match</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Apr 7</td><td><span class="badge badge-critical">A+</span></td><td>2</td><td><span class="badge badge-critical">Critical</span></td><td>3m 12s</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
+                <tr><td>Apr 5</td><td><span class="badge badge-critical">O−</span></td><td>1</td><td><span class="badge badge-critical">Critical</span></td><td>4m 55s</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
+                <tr><td>Apr 3</td><td><span class="badge badge-critical">B+</span></td><td>3</td><td><span class="badge badge-urgent">Urgent</span></td><td>7m 30s</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
+                <tr><td>Apr 1</td><td><span class="badge badge-critical">AB−</span></td><td>1</td><td><span class="badge badge-critical">Critical</span></td><td>—</td><td><span class="badge badge-muted">Cancelled</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MAP VIEW -->
+        <div class="dash-section" id="section-map">
+          <div class="sect-head"><h3>Donor Map View</h3></div>
+          <a href="map.html" class="btn btn-primary" style="margin-bottom:1rem;display:inline-flex;">Open Full Map →</a>
+          <div class="card" style="height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;">
+            <div style="font-size:3rem;">🗺️</div>
+            <p style="color:var(--text-muted);font-size:0.85rem;">Google Maps integration — 23 donors pinned within 10 km</p>
+            <a href="map.html" style="font-size:0.8rem;color:var(--red-bright);">Open map view →</a>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    // Commit 14 & 15 & 16: dashboard logic
+
+    let reqUnits = 1; let selUrgencyVal = ''; let selBloodVal = '';
+
+    function openModal() { document.getElementById('reqModal').classList.add('open'); }
+    function closeModal() { document.getElementById('reqModal').classList.remove('open'); }
+
+    function selBlood(bg) {
+      selBloodVal = bg;
+      document.getElementById('reqBlood').value = bg;
+      document.querySelectorAll('.blood-chip').forEach(c => c.classList.remove('selected'));
+      [...document.querySelectorAll('.blood-chip')].find(c => c.textContent.replace('−','-') === bg || c.textContent === bg)?.classList.add('selected');
+    }
+
+    function selUrgency(u, el) {
+      selUrgencyVal = u;
+      document.getElementById('reqUrgency').value = u;
+      document.querySelectorAll('.urgency-opt').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function changeUnits(d) {
+      reqUnits = Math.max(1, Math.min(5, reqUnits + d));
+      document.getElementById('unitsVal').textContent = reqUnits;
+    }
+
+    function submitRequest() {
+      if (!selBloodVal) { toast('Select a blood group', 'error'); return; }
+      if (!selUrgencyVal) { toast('Select urgency level', 'error'); return; }
+      closeModal();
+      toast('🚀 Request submitted! Top 3 donors alerted via SMS');
+      document.getElementById('activeCount').textContent = '3';
+    }
+
+    function cancelReq(btn) {
+      const card = btn.closest('.card');
+      toast('Request cancelled — donors notified');
+      setTimeout(() => card.remove(), 500);
+    }
+
+    function fulfillReq(btn) {
+      const card = btn.closest('.card');
+      toast('✓ Marked as fulfilled! Donor locked for 56 days.');
+      card.style.borderColor = 'rgba(29,185,84,0.4)';
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + id).classList.add('active');
+      document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+      [...document.querySelectorAll('.sidebar-item')].find(s => s.textContent.toLowerCase().includes(id.slice(0,3)))?.classList.add('active');
+    }
+
+    // Escalation timer
+    let secs = 138;
+    setInterval(() => {
+      secs = Math.max(0, secs - 1);
+      const m = Math.floor(secs / 60), s = secs % 60;
+      const el = document.getElementById('escalateTimer');
+      if (el) el.textContent = m + ':' + String(s).padStart(2,'0');
+    }, 1000);
+
+    function logout() { localStorage.removeItem('bc_role'); window.location.href = 'login.html'; }
+
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+      document.getElementById('toasts').appendChild(t); setTimeout(() => t.remove(), 3500);
+    }
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+  </script>
+  <script src="shared-theme.js"></script>
+</body>
+</html>
