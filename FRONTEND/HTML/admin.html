@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — BloodConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 20: "feat: admin dashboard — city-wide stats and live request list"
+    Author: Person 5 (Pitch & Demo)
+    Date: Hour 29-31
+
+    Commit 21: "feat: blood shortage stats panel — which groups are critically low"
+    Author: Person 1 (Backend Lead)
+    Date: Hour 31
+
+    Commit 22: "feat: emergency broadcast panel — alert all donors in city"
+    Author: Person 4 (Notifications)
+    Date: Hour 31-32
+
+    Commit 23: "feat: donor management table — verify, suspend, search"
+    Author: Person 5 (Pitch & Demo)
+    Date: Hour 32-33
+
+    Commit 24: "feat: pre-seeded 50 dummy donors for demo"
+    Author: Person 2 (Frontend – Donor)
+    Date: Hour 29-31
+  ============================================================ -->
+
+  <style>
+    /* Shortage bars */
+    .shortage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .shortage-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px;
+    }
+    .shortage-blood { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .shortage-bar-wrap { height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
+    .shortage-bar { height: 100%; border-radius: 4px; }
+    .shortage-count { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .shortage-bar.critical { background: var(--red-bright); }
+    .shortage-bar.low      { background: var(--orange); }
+    .shortage-bar.ok       { background: var(--green); }
+
+    /* Broadcast panel */
+    .broadcast-card {
+      background: rgba(200,16,46,0.04); border: 1px solid var(--border-red);
+      border-radius: var(--radius); padding: 1.5rem;
+    }
+    .broadcast-card h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .broadcast-card p  { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.2rem; }
+    .broadcast-input {
+      width: 100%; padding: 12px 14px;
+      background: var(--ink-3); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: var(--font-sans); font-size: 0.9rem; outline: none; resize: none;
+      margin-bottom: 10px; transition: border-color 0.2s;
+    }
+    .broadcast-input:focus { border-color: var(--red); }
+    .broadcast-row { display: flex; gap: 10px; }
+
+    /* Donor table */
+    .dtable { width: 100%; border-collapse: collapse; }
+    .dtable th { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    .dtable td { padding: 11px 12px; border-bottom: 1px solid rgba(255,255,255,0.025); font-size: 0.83rem; }
+    .dtable tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .action-btn {
+      font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; border: none;
+      cursor: pointer; font-family: var(--font-sans); font-weight: 600; transition: all 0.2s;
+    }
+    .action-btn.verify   { background: rgba(29,185,84,0.12); color: var(--green); }
+    .action-btn.suspend  { background: rgba(200,16,46,0.1); color: var(--red-bright); }
+    .action-btn.verify:hover  { background: rgba(29,185,84,0.25); }
+    .action-btn.suspend:hover { background: rgba(200,16,46,0.2); }
+
+    /* Search */
+    .search-bar {
+      display: flex; gap: 10px; margin-bottom: 1rem;
+    }
+    .search-bar input { flex:1; }
+    .search-bar select { width: 130px; }
+
+    /* Live req list */
+    .live-req-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.025); }
+    .live-req-row:last-child { border-bottom: none; }
+    .lrr-body { flex: 1; }
+    .lrr-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .lrr-meta  { font-size: 0.72rem; color: var(--text-muted); }
+
+    .dash-section { display: none; }
+    .dash-section.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="noise-overlay"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Connect</em></span></a>
+      <div class="nav-right">
+        <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--red-bright);border:1px solid var(--border-red);padding:4px 10px;border-radius:4px;">ADMIN</span>
+        <button class="btn-nav-outline" onclick="window.location.href='login.html'">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="dash-layout">
+
+      <!-- Sidebar -->
+      <aside class="dash-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Admin Panel</div>
+          <div class="sidebar-item active" onclick="showSection('overview')"><span class="si-icon">📊</span> City Overview</div>
+          <div class="sidebar-item" onclick="showSection('requests')"><span class="si-icon">🩸</span> Live Requests</div>
+          <div class="sidebar-item" onclick="showSection('donors')"><span class="si-icon">👥</span> Donor Management</div>
+          <div class="sidebar-item" onclick="showSection('shortage')"><span class="si-icon">📉</span> Shortage Stats</div>
+          <div class="sidebar-item" onclick="showSection('broadcast')"><span class="si-icon">📡</span> Emergency Broadcast</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Quick Links</div>
+          <div class="sidebar-item" onclick="window.location.href='map.html'"><span class="si-icon">🗺</span> Map View</div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="dash-main">
+
+        <!-- Stats (Commit 20) -->
+        <div class="stats-row" data-reveal>
+          <div class="stat-card">
+            <div class="stat-card-label">Total Donors</div>
+            <div class="stat-card-val">50</div>
+            <div class="stat-card-sub">Gwalior City</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Available Now</div>
+            <div class="stat-card-val" style="color:var(--green);">34</div>
+            <div class="stat-card-sub">Online &amp; eligible</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Active Requests</div>
+            <div class="stat-card-val" style="color:var(--red-bright);">7</div>
+            <div class="stat-card-sub">City-wide</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Fulfilled Today</div>
+            <div class="stat-card-val">12</div>
+            <div class="stat-card-sub">94% success rate</div>
+          </div>
+        </div>
+
+        <!-- OVERVIEW -->
+        <div class="dash-section active" id="section-overview">
+          <div class="card" data-reveal data-reveal-delay="1" style="margin-bottom:1.2rem;">
+            <div class="sect-head"><h3>City at a Glance</h3></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+              <div>
+                <div style="font-size:0.72rem;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:8px;">REQUESTS TODAY</div>
+                <div class="timeline">
+                  <div class="live-req-row">
+                    <div class="blood-pill" style="width:38px;height:38px;font-size:0.9rem;">O−</div>
+                    <div class="lrr-body"><div class="lrr-title">Kamla Raja · Critical</div><div class="lrr-meta">0.8 km · 2m ago · Matched</div></div>
+                    <span class="badge badge-critical">●</span>
+                  </div>
+                  <div class="live-req-row">
+                    <div class="blood-pill" style="width:38px;height:38px;font-size:0.9rem;">A+</div>
+                    <div class="lrr-body"><div class="lrr-title">City Hospital · Urgent</div><div class="lrr-meta">2.1 km · 15m ago · Alerted</div></div>
+                    <span class="badge badge-urgent">●</span>
+                  </div>
+                  <div class="live-req-row">
+                    <div class="blood-pill" style="width:38px;height:38px;font-size:0.9rem;">B+</div>
+                    <div class="lrr-body"><div class="lrr-title">Apollo Hospital · Normal</div><div class="lrr-meta">3.4 km · 1h ago · Fulfilled</div></div>
+                    <span class="badge badge-success">✓</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:0.72rem;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:8px;">DONOR STATUS</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="flex:1;"><div class="shortage-bar-wrap"><div class="shortage-bar ok" style="width:68%"></div></div></div>
+                    <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">34 available</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="flex:1;"><div class="shortage-bar-wrap"><div class="shortage-bar low" style="width:22%"></div></div></div>
+                    <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">11 locked</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="flex:1;"><div class="shortage-bar-wrap"><div class="shortage-bar" style="width:10%;background:var(--text-muted)"></div></div></div>
+                    <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">5 offline</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REQUESTS -->
+        <div class="dash-section" id="section-requests">
+          <div class="sect-head"><h3>Live City Requests</h3></div>
+          <div class="card">
+            <div class="live-req-row">
+              <div class="blood-pill" style="width:40px;height:40px;">O−</div>
+              <div class="lrr-body"><div class="lrr-title">Kamla Raja Hospital · Critical · 2 units</div><div class="lrr-meta">Lashkar · 2m ago · 3 donors alerted</div></div>
+              <span class="badge badge-critical">CRITICAL</span>
+            </div>
+            <div class="live-req-row">
+              <div class="blood-pill" style="width:40px;height:40px;">A+</div>
+              <div class="lrr-body"><div class="lrr-title">City Hospital · Urgent · 1 unit</div><div class="lrr-meta">Morar · 15m ago · 2 donors alerted</div></div>
+              <span class="badge badge-urgent">URGENT</span>
+            </div>
+            <div class="live-req-row">
+              <div class="blood-pill" style="width:40px;height:40px;">AB−</div>
+              <div class="lrr-body"><div class="lrr-title">Apollo Hospital · Critical · 1 unit</div><div class="lrr-meta">Hazira · 30m ago · Expanding radius to 10km</div></div>
+              <span class="badge badge-critical">ESCALATING</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DONOR MANAGEMENT (Commit 23 & 24) -->
+        <div class="dash-section" id="section-donors">
+          <div class="sect-head"><h3>Donor Management</h3><span style="font-size:0.78rem;color:var(--text-muted);">50 total · 34 available</span></div>
+          <div class="search-bar">
+            <input type="text" class="form-control" placeholder="🔍 Search by name or blood group..." oninput="filterDonors(this.value)" />
+            <select class="form-control" onchange="filterBlood(this.value)">
+              <option value="">All blood groups</option>
+              <option>A+</option><option>A−</option><option>B+</option><option>B−</option>
+              <option>AB+</option><option>AB−</option><option>O+</option><option>O−</option>
+            </select>
+          </div>
+          <div class="card" style="overflow-x:auto;">
+            <table class="dtable" id="donorTable">
+              <thead><tr><th>Donor</th><th>Blood</th><th>Area</th><th>Status</th><th>Last Donated</th><th>Actions</th></tr></thead>
+              <tbody id="donorTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SHORTAGE STATS (Commit 21) -->
+        <div class="dash-section" id="section-shortage">
+          <div class="sect-head"><h3>Blood Group Shortage</h3><span style="font-size:0.75rem;color:var(--text-muted);">Live · Gwalior City</span></div>
+          <div class="shortage-grid" data-reveal>
+            <div class="shortage-card"><div class="shortage-blood">A+</div><div class="shortage-bar-wrap"><div class="shortage-bar ok" style="width:72%"></div></div><div class="shortage-count">8 donors available</div></div>
+            <div class="shortage-card"><div class="shortage-blood">A−</div><div class="shortage-bar-wrap"><div class="shortage-bar low" style="width:30%"></div></div><div class="shortage-count">3 donors available</div></div>
+            <div class="shortage-card"><div class="shortage-blood">B+</div><div class="shortage-bar-wrap"><div class="shortage-bar ok" style="width:80%"></div></div><div class="shortage-count">9 donors available</div></div>
+            <div class="shortage-card"><div class="shortage-blood">B−</div><div class="shortage-bar-wrap"><div class="shortage-bar critical" style="width:15%"></div></div><div class="shortage-count">⚠ Only 1 available</div></div>
+            <div class="shortage-card"><div class="shortage-blood">AB+</div><div class="shortage-bar-wrap"><div class="shortage-bar ok" style="width:60%"></div></div><div class="shortage-count">5 donors available</div></div>
+            <div class="shortage-card"><div class="shortage-blood">AB−</div><div class="shortage-bar-wrap"><div class="shortage-bar critical" style="width:10%"></div></div><div class="shortage-count">⚠ Only 1 available</div></div>
+            <div class="shortage-card"><div class="shortage-blood">O+</div><div class="shortage-bar-wrap"><div class="shortage-bar ok" style="width:90%"></div></div><div class="shortage-count">12 donors available</div></div>
+            <div class="shortage-card"><div class="shortage-blood">O−</div><div class="shortage-bar-wrap"><div class="shortage-bar low" style="width:25%"></div></div><div class="shortage-count">⚠ Only 2 available</div></div>
+          </div>
+        </div>
+
+        <!-- EMERGENCY BROADCAST (Commit 22) -->
+        <div class="dash-section" id="section-broadcast">
+          <div class="sect-head"><h3>Emergency Broadcast</h3></div>
+          <div class="broadcast-card">
+            <h3>📡 Broadcast to All City Donors</h3>
+            <p>Send an emergency SMS to all available donors in Gwalior simultaneously. Use only for mass emergencies.</p>
+            <textarea class="broadcast-input" rows="3" id="broadcastMsg" placeholder="🚨 URGENT: Critical shortage of O− blood across Gwalior hospitals. All O− donors — please report immediately. Call 0751-XXXXXX or open BloodConnect app."></textarea>
+            <div class="broadcast-row">
+              <select class="form-control" id="broadcastTarget" style="flex:1;">
+                <option>All available donors (34)</option>
+                <option>O− donors only (2)</option>
+                <option>O+ donors only (12)</option>
+                <option>All O donors (14)</option>
+                <option>All city hospitals (8)</option>
+              </select>
+              <button class="btn btn-primary" onclick="sendBroadcast()">🚨 Send Emergency Broadcast</button>
+            </div>
+          </div>
+          <div style="margin-top:1rem;padding:10px 14px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius-sm);">
+            <p style="font-size:0.78rem;color:var(--orange);">⚠ This will send SMS to all selected donors via Twilio. Use only for genuine emergencies. All broadcasts are logged and audited.</p>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    // Commit 24: 50 dummy donors seeded for demo
+    const dummyDonors = [
+      {name:'Rahul Sharma',  blood:'O+',  area:'Lashkar',      status:'available', last:'Mar 12, 2026'},
+      {name:'Priya Kumari',  blood:'O−',  area:'City Centre',  status:'available', last:'Jan 8, 2026'},
+      {name:'Amit Verma',    blood:'A+',  area:'Morar',        status:'available', last:'Feb 20, 2026'},
+      {name:'Sunita Rao',    blood:'B+',  area:'Thatipur',     status:'available', last:'Dec 5, 2025'},
+      {name:'Mohit Khan',    blood:'AB+', area:'Hazira',       status:'available', last:'Nov 14, 2025'},
+      {name:'Dev Kapoor',    blood:'AB+', area:'Gwalior Fort', status:'offline',   last:'Oct 3, 2025'},
+      {name:'Neha Joshi',    blood:'A−',  area:'Padav',        status:'available', last:'Mar 1, 2026'},
+      {name:'Raj Gupta',     blood:'B−',  area:'Gola Ka Mandir',status:'available',last:'Feb 10, 2026'},
+      {name:'Divya Mishra',  blood:'O+',  area:'Lashkar',      status:'locked',    last:'Mar 5, 2026'},
+      {name:'Arjun Singh',   blood:'A+',  area:'City Centre',  status:'available', last:'Jan 20, 2026'},
+      {name:'Kavita Sharma', blood:'B+',  area:'Morar',        status:'available', last:'Dec 18, 2025'},
+      {name:'Ravi Tiwari',   blood:'O−',  area:'Hazira',       status:'available', last:'Nov 30, 2025'},
+      {name:'Suman Pathak',  blood:'AB−', area:'Thatipur',     status:'locked',    last:'Mar 10, 2026'},
+      {name:'Vikram Yadav',  blood:'O+',  area:'Padav',        status:'available', last:'Feb 1, 2026'},
+      {name:'Anita Dubey',   blood:'A+',  area:'Lashkar',      status:'available', last:'Jan 5, 2026'},
+    ];
+    // Generate 35 more for full 50
+    const extras = ['B+','A+','O+','AB+','B−','O+','A−','B+','O+','A+','O−','B+','A+','O+','AB+','B+','O+','A+','O+','B+','A+','O+','AB−','B+','O+','A+','O+','B+','A+','O+','A−','B+','O+','AB+','B+'];
+    const eAreas = ['Lashkar','Morar','Thatipur','Hazira','Padav','City Centre','Gola Ka Mandir','Gwalior Fort'];
+    for (let i = 0; i < 35; i++) {
+      dummyDonors.push({ name:'Donor '+(i+16), blood:extras[i], area:eAreas[i%eAreas.length], status:i%7===0?'offline':i%5===0?'locked':'available', last:'2025' });
+    }
+
+    function renderDonors(data) {
+      const tb = document.getElementById('donorTbody');
+      tb.innerHTML = data.map(d => `
+        <tr>
+          <td style="font-weight:600;">${d.name}</td>
+          <td><span class="badge badge-critical">${d.blood}</span></td>
+          <td style="color:var(--text-muted);">${d.area}</td>
+          <td>${d.status==='available'?'<span class="badge badge-success">Available</span>':d.status==='locked'?'<span class="badge badge-urgent">56d Lock</span>':'<span class="badge badge-muted">Offline</span>'}</td>
+          <td style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.75rem;">${d.last}</td>
+          <td style="display:flex;gap:6px;">
+            <button class="action-btn verify" onclick="toast('✓ Donor verified')">Verify</button>
+            <button class="action-btn suspend" onclick="toast('Donor suspended','error')">Suspend</button>
+          </td>
+        </tr>`).join('');
+    }
+    renderDonors(dummyDonors);
+
+    function filterDonors(q) {
+      renderDonors(dummyDonors.filter(d => d.name.toLowerCase().includes(q.toLowerCase()) || d.blood.toLowerCase().includes(q.toLowerCase())));
+    }
+    function filterBlood(bg) {
+      renderDonors(bg ? dummyDonors.filter(d => d.blood === bg || d.blood === bg.replace('−','-')) : dummyDonors);
+    }
+
+    // Commit 22: broadcast
+    function sendBroadcast() {
+      const msg = document.getElementById('broadcastMsg').value.trim();
+      if (!msg) { toast('Enter broadcast message', 'error'); return; }
+      const target = document.getElementById('broadcastTarget').value;
+      setTimeout(() => { toast(`📡 Emergency broadcast sent to "${target}" via Twilio SMS`); }, 800);
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + id).classList.add('active');
+      document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+      [...document.querySelectorAll('.sidebar-item')].find(s => s.textContent.toLowerCase().includes(id.slice(0,4)))?.classList.add('active');
+    }
+
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+      document.getElementById('toasts').appendChild(t); setTimeout(() => t.remove(), 3500);
+    }
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+  </script>
+</body>
+</html>
