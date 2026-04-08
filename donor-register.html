@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donor Registration — BloodConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 6: "feat: donor registration form — name, age, blood group, location"
+    Author: Person 2 (Frontend – Donor)
+    Date: Hour 5-7
+
+    Commit 7: "feat: add 56-day eligibility check on last donation date input"
+    Author: Person 1 (Backend Lead)
+    Date: Hour 7-8
+
+    Commit 8: "fix: blood group selector — single selection highlight"
+    Author: Person 2 (Frontend – Donor)
+    Date: Hour 8
+  ============================================================ -->
+
+  <style>
+    .reg-page { padding-top: calc(var(--nav-h) + 2rem); padding-bottom: 4rem; }
+    .reg-wrap { max-width: 680px; margin: 0 auto; padding: 0 1.5rem; }
+
+    .reg-header { text-align: center; margin-bottom: 2.5rem; }
+    .reg-header .section-label { margin-bottom: 0.5rem; }
+    .reg-title { font-size: clamp(1.8rem, 3.5vw, 2.4rem); font-weight: 900; color: var(--text); margin-bottom: 0.5rem; }
+    .reg-title em { font-style: italic; color: var(--red-bright); }
+    .reg-sub { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Progress steps */
+    .steps-wrap { display: flex; align-items: center; gap: 0; margin-bottom: 2.5rem; }
+    .step-item {
+      display: flex; align-items: center; gap: 8px; flex: 1;
+    }
+    .step-circle {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);
+      border: 1px solid var(--border); background: var(--ink-3); color: var(--text-muted);
+      transition: all 0.3s;
+    }
+    .step-circle.active { background: rgba(200,16,46,0.15); border-color: var(--red); color: var(--red-bright); }
+    .step-circle.done   { background: rgba(29,185,84,0.15); border-color: rgba(29,185,84,0.4); color: var(--green); }
+    .step-label { font-size: 0.76rem; color: var(--text-muted); white-space: nowrap; }
+    .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 8px; }
+
+    /* Form sections */
+    .form-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem;
+      display: none; animation: fadeUp 0.4s var(--ease-expo);
+    }
+    .form-section.active { display: block; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    .form-section-title {
+      font-size: 1.05rem; font-weight: 700; color: var(--text);
+      margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;
+    }
+    .form-section-title span { font-size: 1.2rem; }
+
+    /* Blood group selector */
+    .blood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 6px; }
+    .blood-opt {
+      padding: 14px 0; border-radius: var(--radius-sm); text-align: center;
+      font-family: var(--font-serif); font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      border: 1px solid var(--border); background: var(--ink-3); color: var(--text-dim);
+    }
+    .blood-opt:hover { border-color: var(--border-red); color: var(--text); }
+    .blood-opt.selected { background: rgba(200,16,46,0.12); border-color: var(--red-bright); color: var(--red-bright); }
+    .blood-opt.universal { border-style: dashed; }
+    .blood-opt.universal.selected { background: rgba(200,16,46,0.18); }
+
+    /* Location row */
+    .location-row { display: flex; gap: 10px; }
+    .location-row .form-control { flex: 1; }
+    .locate-btn {
+      padding: 0 16px; border-radius: var(--radius-sm);
+      background: var(--ink-3); border: 1px solid var(--border);
+      color: var(--text-dim); cursor: pointer; font-size: 0.8rem; font-family: var(--font-sans);
+      white-space: nowrap; transition: border-color 0.2s, color 0.2s;
+    }
+    .locate-btn:hover { border-color: var(--border-red); color: var(--text); }
+
+    /* Eligibility indicator */
+    .eligibility-check {
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      font-size: 0.8rem; margin-top: 8px; display: none;
+      align-items: center; gap: 8px;
+    }
+    .eligibility-check.eligible   { background: rgba(29,185,84,0.08); border: 1px solid rgba(29,185,84,0.2); color: var(--green); display: flex; }
+    .eligibility-check.ineligible { background: rgba(200,16,46,0.08); border: 1px solid var(--border-red); color: var(--red-bright); display: flex; }
+
+    /* Consent */
+    .consent-box {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 12px 14px; background: var(--ink-3);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+    .consent-box input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--red); flex-shrink: 0; }
+    .consent-box label { font-size: 0.82rem; color: var(--text-dim); cursor: pointer; line-height: 1.5; }
+
+    /* Navigation row */
+    .form-nav { display: flex; gap: 10px; margin-top: 1.5rem; }
+    .form-nav .btn { flex: 1; justify-content: center; }
+
+    /* Security summary */
+    .security-item {
+      display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .security-item:last-child { border-bottom: none; }
+    .security-icon {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;
+    }
+    .si-ok   { background: rgba(29,185,84,0.12); border: 1px solid rgba(29,185,84,0.25); color: var(--green); }
+    .si-warn { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--orange); }
+    .security-body h5 { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .security-body p  { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <div class="noise-overlay"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-drop">🩸</span>
+        <span>Blood<em>Connect</em></span>
+      </a>
+      <div class="nav-right">
+        <a href="role.html" class="btn-nav-outline">← Change role</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="reg-page">
+    <div class="reg-wrap">
+
+      <div class="reg-header" data-reveal>
+        <p class="section-label">— Donor Registration</p>
+        <h1 class="reg-title">Join the<br /><em>lifesaving network</em></h1>
+        <p class="reg-sub">Complete your profile in 3 quick steps</p>
+      </div>
+
+      <!-- Progress steps -->
+      <div class="steps-wrap" data-reveal data-reveal-delay="1">
+        <div class="step-item">
+          <div class="step-circle active" id="sc1">1</div>
+          <span class="step-label">Basic Info</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item">
+          <div class="step-circle" id="sc2">2</div>
+          <span class="step-label">Blood &amp; Medical</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item">
+          <div class="step-circle" id="sc3">3</div>
+          <span class="step-label">Verify &amp; Submit</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Basic Info -->
+      <div class="form-section active" id="step1" data-reveal data-reveal-delay="2">
+        <div class="form-section-title"><span>👤</span> Basic Information</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="req">*</span></label>
+            <input type="text" class="form-control" id="fname" placeholder="Rahul Sharma" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age <span class="req">*</span></label>
+            <input type="number" class="form-control" id="fage" placeholder="25" min="18" max="65" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone <span class="req">*</span></label>
+            <input type="tel" class="form-control" id="fphone" placeholder="98765 43210" maxlength="10" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Weight (kg) <span class="req">*</span></label>
+            <input type="number" class="form-control" id="fweight" placeholder="70" min="50" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location / Area <span class="req">*</span></label>
+          <div class="location-row">
+            <input type="text" class="form-control" id="floc" placeholder="Lashkar, Gwalior" />
+            <button class="locate-btn" onclick="autoLocate()">📍 Detect</button>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-primary" onclick="goStep(2)">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Blood & Medical -->
+      <div class="form-section" id="step2">
+        <div class="form-section-title"><span>🩸</span> Blood Group &amp; Medical Info</div>
+
+        <div class="form-group">
+          <label class="form-label">Blood Group <span class="req">*</span></label>
+          <div class="blood-grid">
+            <div class="blood-opt" onclick="selectBlood('A+')">A+</div>
+            <div class="blood-opt" onclick="selectBlood('A-')">A−</div>
+            <div class="blood-opt" onclick="selectBlood('B+')">B+</div>
+            <div class="blood-opt" onclick="selectBlood('B-')">B−</div>
+            <div class="blood-opt" onclick="selectBlood('AB+')">AB+</div>
+            <div class="blood-opt" onclick="selectBlood('AB-')">AB−</div>
+            <div class="blood-opt universal" onclick="selectBlood('O+')">O+</div>
+            <div class="blood-opt universal" onclick="selectBlood('O-')">O−</div>
+          </div>
+          <input type="hidden" id="fblood" />
+        </div>
+
+        <div class="form-group" style="margin-top:1.5rem;">
+          <label class="form-label">Last Donation Date (if any)</label>
+          <input type="date" class="form-control" id="flastdon" onchange="checkEligibility()" />
+          <div class="eligibility-check" id="eligCheck"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Medical Conditions (if any)</label>
+          <input type="text" class="form-control" id="fmedical" placeholder="None / Diabetes / Hypertension etc." />
+        </div>
+
+        <div class="consent-box" style="margin-top:1rem;">
+          <input type="checkbox" id="fconsent" />
+          <label for="fconsent">I consent to share my blood group and area name with hospitals for emergency matching. My exact address will never be shared.</label>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+          <button class="btn btn-primary" onclick="goStep(3)">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Verify -->
+      <div class="form-section" id="step3">
+        <div class="form-section-title"><span>🔒</span> Security Verification</div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Aadhaar Last 4 Digits <span class="req">*</span></label>
+            <input type="text" class="form-control" id="faad" placeholder="XXXX" maxlength="4" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emergency Contact <span class="req">*</span></label>
+            <input type="tel" class="form-control" id="femerg" placeholder="Emergency number" maxlength="10" />
+          </div>
+        </div>
+
+        <div style="margin-top:1.25rem; margin-bottom:1.5rem;">
+          <div class="security-item">
+            <div class="security-icon si-ok">✓</div>
+            <div class="security-body">
+              <h5>Phone Verified</h5>
+              <p>Your phone number was verified via OTP in the previous step.</p>
+            </div>
+          </div>
+          <div class="security-item">
+            <div class="security-icon si-ok">✓</div>
+            <div class="security-body">
+              <h5>Medical Eligibility Gate</h5>
+              <p>Age 18–65, weight 50kg+, and 56-day lock are automatically enforced.</p>
+            </div>
+          </div>
+          <div class="security-item">
+            <div class="security-icon si-warn">!</div>
+            <div class="security-body">
+              <h5>Fraud Prevention</h5>
+              <p>False information will result in permanent ban and may attract legal action.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+          <button class="btn btn-primary" onclick="submitRegistration()">
+            <span id="regBtnText">Create Account →</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    // Commit 6: step navigation
+    let currentStep = 1;
+    let selectedBlood = '';
+
+    function goStep(n) {
+      if (n > currentStep && !validateStep(currentStep)) return;
+      document.getElementById('step' + currentStep).classList.remove('active');
+      document.getElementById('step' + n).classList.add('active');
+
+      // Update step circles
+      for (let i = 1; i <= 3; i++) {
+        const c = document.getElementById('sc' + i);
+        c.classList.remove('active', 'done');
+        if (i < n) c.classList.add('done'), c.textContent = '✓';
+        else if (i === n) c.classList.add('active'), c.textContent = i;
+        else c.textContent = i;
+      }
+      currentStep = n;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep(s) {
+      if (s === 1) {
+        const name = document.getElementById('fname').value.trim();
+        const age  = parseInt(document.getElementById('fage').value);
+        const wt   = parseInt(document.getElementById('fweight').value);
+        const loc  = document.getElementById('floc').value.trim();
+        if (!name) { toast('Enter your full name', 'error'); return false; }
+        if (!age || age < 18 || age > 65) { toast('Age must be between 18 and 65', 'error'); return false; }
+        if (!wt || wt < 50) { toast('Minimum weight is 50kg to donate blood', 'error'); return false; }
+        if (!loc) { toast('Enter your location/area', 'error'); return false; }
+      }
+      if (s === 2) {
+        if (!selectedBlood) { toast('Please select your blood group', 'error'); return false; }
+        if (!document.getElementById('fconsent').checked) { toast('Please give consent to continue', 'error'); return false; }
+      }
+      return true;
+    }
+
+    // Commit 8: blood group selector
+    function selectBlood(bg) {
+      selectedBlood = bg;
+      document.getElementById('fblood').value = bg;
+      document.querySelectorAll('.blood-opt').forEach(o => o.classList.remove('selected'));
+      [...document.querySelectorAll('.blood-opt')].find(o => o.textContent.replace('−', '-') === bg || o.textContent === bg)?.classList.add('selected');
+    }
+
+    // Commit 7: 56-day eligibility check
+    function checkEligibility() {
+      const val = document.getElementById('flastdon').value;
+      const el  = document.getElementById('eligCheck');
+      if (!val) { el.className = 'eligibility-check'; return; }
+      const last = new Date(val);
+      const diff = (Date.now() - last.getTime()) / (1000 * 60 * 60 * 24);
+      if (diff >= 56) {
+        el.className = 'eligibility-check eligible';
+        el.textContent = '✓ Eligible to donate — ' + Math.floor(diff) + ' days since last donation';
+      } else {
+        const remaining = Math.ceil(56 - diff);
+        el.className = 'eligibility-check ineligible';
+        el.textContent = '✗ Not yet eligible — ' + remaining + ' more days required (56-day lock)';
+      }
+    }
+
+    function autoLocate() {
+      const btn = document.querySelector('.locate-btn');
+      btn.textContent = '⏳ Locating...';
+      setTimeout(() => {
+        document.getElementById('floc').value = 'Lashkar, Gwalior';
+        btn.textContent = '📍 Located!';
+        setTimeout(() => { btn.textContent = '📍 Detect'; }, 2000);
+        toast('Location detected: Lashkar, Gwalior');
+      }, 1500);
+    }
+
+    function submitRegistration() {
+      if (!validateStep(3)) return;
+      const btn = document.getElementById('regBtnText');
+      btn.textContent = '⏳ Creating...';
+      // Simulate Firebase save
+      setTimeout(() => {
+        localStorage.setItem('bc_role', 'donor');
+        localStorage.setItem('bc_donor_blood', selectedBlood || 'O+');
+        localStorage.setItem('bc_donor_name', document.getElementById('fname').value || 'Rahul Sharma');
+        toast('Account created successfully! ✓');
+        setTimeout(() => { window.location.href = 'donor-dashboard.html'; }, 1000);
+      }, 1800);
+    }
+
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      document.getElementById('toasts').appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    // Reveal
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+  </script>
+</body>
+</html>
