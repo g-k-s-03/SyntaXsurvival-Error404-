@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — BloodConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+ 
+
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .login-page {
+      flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    
+    .login-left {
+      background: var(--ink-2);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 4rem 3.5rem; position: relative; overflow: hidden;
+    }
+    .login-left .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(200,16,46,0.16), transparent 70%);
+      top: -100px; right: -100px;
+    }
+    .login-left .orb-b {
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(200,16,46,0.09), transparent 70%);
+      bottom: -80px; left: -60px; top: auto; right: auto;
+    }
+    .login-brand {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 3rem;
+      font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--text);
+      position: relative; z-index: 2;
+    }
+    .login-brand em { font-style: italic; color: var(--red-bright); }
+    .login-brand .drop { font-size: 1.5rem; }
+    .login-headline {
+      font-size: clamp(2rem, 3.5vw, 2.8rem); font-weight: 900;
+      color: var(--text); margin-bottom: 1.2rem; position: relative; z-index: 2;
+    }
+    .login-headline em { font-style: italic; color: var(--red-bright); }
+    .login-sub {
+      font-size: 0.9rem; color: var(--text-dim); line-height: 1.7; max-width: 340px;
+      position: relative; z-index: 2; margin-bottom: 2.5rem;
+    }
+    .trust-list { display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 2; }
+    .trust-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.83rem; color: var(--text-muted);
+    }
+    .trust-item span:first-child {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(29,185,84,0.12); border: 1px solid rgba(29,185,84,0.25);
+      display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0;
+    }
+
+   
+    .login-right {
+      display: flex; align-items: center; justify-content: center;
+      padding: 3rem 2.5rem;
+    }
+    .login-box { width: 100%; max-width: 420px; }
+    .login-title { font-size: 1.7rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .login-hint  { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; }
+
+    
+    .phone-wrap {
+      display: flex; gap: 0;
+      background: var(--ink-3); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .phone-wrap:focus-within {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(200,16,46,0.12);
+    }
+    .phone-prefix {
+      padding: 12px 14px; background: rgba(255,255,255,0.03);
+      border-right: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-dim);
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .phone-input {
+      flex: 1; padding: 12px 14px; background: transparent;
+      border: none; outline: none; font-size: 0.95rem; color: var(--text);
+      font-family: var(--font-sans); letter-spacing: 0.04em;
+    }
+    .phone-input::placeholder { color: var(--text-muted); }
+
+    
+    .otp-section { display: none; }
+    .otp-section.visible { display: block; }
+
+    .otp-timer {
+      font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);
+      text-align: right; margin-bottom: 1rem;
+    }
+    .otp-timer .time { color: var(--red-bright); font-weight: 600; }
+
+    .resend-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 0.75rem;
+    }
+    .resend-btn {
+      font-size: 0.8rem; color: var(--red-bright); background: none; border: none;
+      cursor: pointer; font-family: var(--font-sans); transition: opacity 0.2s;
+    }
+    .resend-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .change-num {
+      font-size: 0.78rem; color: var(--text-muted); cursor: pointer;
+      transition: color 0.2s;
+    }
+    .change-num:hover { color: var(--text); }
+
+   
+    .btn-primary.loading .btn-text { display: none; }
+    .btn-primary.loading .btn-spin { display: inline-block; }
+    .btn-spin { display: none; }
+
+   
+    .verified-check {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: rgba(29,185,84,0.08); border: 1px solid rgba(29,185,84,0.2);
+      border-radius: var(--radius-sm); padding: 12px;
+      font-size: 0.88rem; color: var(--green); margin-top: 1rem;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .verified-check.show { opacity: 1; }
+
+    .separator { text-align: center; font-size: 0.78rem; color: var(--text-muted); margin: 1.5rem 0; position: relative; }
+    .separator::before { content: ''; position: absolute; left: 0; top: 50%; width: 40%; height: 1px; background: var(--border); }
+    .separator::after  { content: ''; position: absolute; right: 0; top: 50%; width: 40%; height: 1px; background: var(--border); }
+
+    .demo-note {
+      margin-top: 1.5rem; padding: 12px 14px;
+      background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);
+      border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--orange);
+      display: flex; gap: 8px;
+    }
+
+    @media(max-width: 768px){
+      .login-page { grid-template-columns: 1fr; }
+      .login-left { display: none; }
+      .login-right { padding: 2rem 1.5rem; align-items: flex-start; padding-top: 6rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="noise-overlay"></div>
+
+ 
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-drop">🩸</span>
+        <span>Blood<em>Connect</em></span>
+      </a>
+      <div class="nav-right">
+        <a href="landing.html" class="btn-nav-outline">Back to Home</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="login-page">
+    <!-- Left branding -->
+    <div class="login-left">
+      <div class="orb"></div>
+      <div class="orb orb-b"></div>
+      <div class="login-brand"><span class="drop">🩸</span> Blood<em>Connect</em></div>
+      <h1 class="login-headline">Every second<br /><em>counts.</em></h1>
+      <p class="login-sub">
+        India's real-time blood matching platform. Verified donors, instant SMS alerts,
+        GPS-based matching — all in under 3 minutes.
+      </p>
+      <div class="trust-list">
+        <div class="trust-item"><span>✓</span><span>OTP verified — no fake accounts</span></div>
+        <div class="trust-item"><span>✓</span><span>SMS alerts work on any basic phone</span></div>
+        <div class="trust-item"><span>✓</span><span>Your exact location is never shared</span></div>
+        <div class="trust-item"><span>✓</span><span>56-day medical safety lock enforced</span></div>
+      </div>
+    </div>
+
+   
+    <div class="login-right">
+      <div class="login-box">
+        <h2 class="login-title">Welcome back</h2>
+        <p class="login-hint">Enter your phone number to receive an OTP</p>
+
+        
+        <div id="phoneStep">
+          <div class="form-group">
+            <label class="form-label">Phone Number <span class="req">*</span></label>
+            <div class="phone-wrap">
+              <div class="phone-prefix">🇮🇳 +91</div>
+              <input
+                type="tel" class="phone-input" id="phoneInput"
+                placeholder="98765 43210" maxlength="10"
+                oninput="this.value=this.value.replace(/\D/g,'')"
+              />
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-full btn-lg" id="sendOtpBtn" onclick="sendOTP()" style="margin-top:0.5rem;">
+            <span class="btn-text">Send OTP →</span>
+            <span class="btn-spin"><span class="spinner"></span> Sending...</span>
+          </button>
+
+          <div class="demo-note">
+            <span>💡</span>
+            <span><strong>Demo mode:</strong> Use any 10-digit number. OTP will be <strong>123456</strong> for testing.</span>
+          </div>
+        </div>
+
+        <div class="otp-section" id="otpStep">
+          <div class="form-group">
+            <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>Enter 6-digit OTP</span>
+              <span class="otp-timer">Expires in <span class="time" id="timer">60</span>s</span>
+            </label>
+            <div class="otp-inputs" id="otpInputs">
+              <input type="text" class="otp-input" maxlength="1" data-index="0" />
+              <input type="text" class="otp-input" maxlength="1" data-index="1" />
+              <input type="text" class="otp-input" maxlength="1" data-index="2" />
+              <input type="text" class="otp-input" maxlength="1" data-index="3" />
+              <input type="text" class="otp-input" maxlength="1" data-index="4" />
+              <input type="text" class="otp-input" maxlength="1" data-index="5" />
+            </div>
+          </div>
+
+          <div class="resend-row">
+            <span class="change-num" onclick="changeNumber()">← Change number</span>
+            <button class="resend-btn" id="resendBtn" disabled onclick="resendOTP()">Resend OTP</button>
+          </div>
+
+          <button class="btn btn-primary btn-full btn-lg" onclick="verifyOTP()" style="margin-top:1.5rem;">
+            <span>Verify &amp; Continue →</span>
+          </button>
+
+          <div class="verified-check" id="verifiedCheck">
+            <span>✓</span> Phone verified! Redirecting...
+          </div>
+        </div>
+
+        <div class="separator">or</div>
+        <a href="role.html" class="btn btn-secondary btn-full" style="justify-content:center;">
+          New user? Register here
+        </a>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+   
+
+    let timerInterval = null;
+    let timerVal = 60;
+
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      document.getElementById('toasts').appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    function sendOTP() {
+      const phone = document.getElementById('phoneInput').value.trim();
+      if (phone.length !== 10) { toast('Enter a valid 10-digit number', 'error'); return; }
+
+      const btn = document.getElementById('sendOtpBtn');
+      btn.classList.add('loading'); btn.disabled = true;
+
+      
+      setTimeout(() => {
+        btn.classList.remove('loading');
+        document.getElementById('phoneStep').style.display = 'none';
+        document.getElementById('otpStep').classList.add('visible');
+        toast('OTP sent to +91 ' + phone);
+        startTimer();
+        document.querySelector('.otp-input').focus();
+      }, 1400);
+    }
+
+    function startTimer() {
+      timerVal = 60;
+      const el = document.getElementById('timer');
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timerVal--;
+        el.textContent = timerVal;
+        if (timerVal <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('resendBtn').disabled = false;
+          el.textContent = '0';
+        }
+      }, 1000);
+    }
+
+    function resendOTP() {
+      document.getElementById('resendBtn').disabled = true;
+      toast('OTP resent!');
+      startTimer();
+      
+      document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+      document.querySelector('.otp-input').focus();
+    }
+
+    function changeNumber() {
+      clearInterval(timerInterval);
+      document.getElementById('phoneStep').style.display = '';
+      document.getElementById('otpStep').classList.remove('visible');
+      document.getElementById('phoneInput').value = '';
+      document.getElementById('phoneInput').focus();
+    }
+
+    function verifyOTP() {
+      const digits = [...document.querySelectorAll('.otp-input')].map(i => i.value).join('');
+      if (digits.length !== 6) { toast('Enter all 6 digits', 'error'); return; }
+     
+      if (digits !== '123456') { toast('Invalid OTP. Use 123456 for demo', 'error'); return; }
+
+      clearInterval(timerInterval);
+      document.getElementById('verifiedCheck').classList.add('show');
+      toast('Phone verified! ✓');
+      
+      setTimeout(() => {
+        const returning = localStorage.getItem('bc_role');
+        if (returning === 'donor')    window.location.href = 'donor-dashboard.html';
+        else if (returning === 'hospital') window.location.href = 'hospital-dashboard.html';
+        else if (returning === 'admin')    window.location.href = 'admin.html';
+        else window.location.href = 'role.html';
+      }, 1200);
+    }
+
+  
+    document.querySelectorAll('.otp-input').forEach((input, i, arr) => {
+      input.addEventListener('input', () => {
+        input.classList.toggle('filled', input.value.length > 0);
+        if (input.value && i < arr.length - 1) arr[i + 1].focus();
+      });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !input.value && i > 0) arr[i - 1].focus();
+      });
+    });
+  </script>
+</body>
+</html>
