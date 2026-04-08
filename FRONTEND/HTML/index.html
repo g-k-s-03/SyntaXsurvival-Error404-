@@ -1,46 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeLink - Blood Connect</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BloodConnect – Emergency Blood Matching</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
-<div id="splash" class="active">
-    <h1>LifeLink ❤️</h1>
-    <p>Saving Lives Faster</p>
+<!-- ══════════════════════════════════════
+     SCREEN 1 — SPLASH (L1)
+══════════════════════════════════════ -->
+<div id="screen-splash" class="screen active">
+  <div class="splash-bg">
+    <div class="pulse-ring r1"></div>
+    <div class="pulse-ring r2"></div>
+    <div class="pulse-ring r3"></div>
+  </div>
+  <div class="splash-content">
+    <div class="logo-wrap">
+      <div class="drop-icon">
+        <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M30 4 C30 4 6 34 6 50 C6 64.4 16.8 76 30 76 C43.2 76 54 64.4 54 50 C54 34 30 4 30 4Z" fill="url(#dropGrad)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" font-family="Bebas Neue" font-size="22" fill="white" letter-spacing="1">BC</text>
+          <defs>
+            <linearGradient id="dropGrad" x1="30" y1="4" x2="30" y2="76" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#FF3B3B"/>
+              <stop offset="100%" stop-color="#8B0000"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h1 class="brand-name">Blood<span>Connect</span></h1>
+      <p class="tagline">Every Second Counts. Every Drop Matters.</p>
+    </div>
+    <div class="splash-loader">
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+      <p class="loader-text">Initializing Emergency Network…</p>
+    </div>
+  </div>
+  <div class="ecg-line">
+    <svg viewBox="0 0 800 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline class="ecg-path" points="0,40 80,40 120,40 140,10 160,70 180,40 220,40 240,5 260,75 280,40 360,40 400,40 420,10 440,70 460,40 500,40 520,5 540,75 560,40 640,40 680,40 700,10 720,70 740,40 780,40 800,40"/>
+    </svg>
+  </div>
 </div>
 
-<!-- LOGIN -->
-<div id="login" class="container">
-    <h2>Login</h2>
-    <input type="text" id="phone" placeholder="Enter phone number">
-    <button onclick="sendOTP()">Send OTP</button>
+<!-- ══════════════════════════════════════
+     SCREEN 2 — PHONE LOGIN (L2)
+══════════════════════════════════════ -->
+<div id="screen-phone" class="screen">
+  <div class="auth-layout">
+    <div class="auth-left">
+      <div class="stat-card"><span class="stat-num" data-target="12847">0</span><span class="stat-label">Donors Online</span></div>
+      <div class="stat-card accent"><span class="stat-num" data-target="432">0</span><span class="stat-label">Lives Saved Today</span></div>
+      <div class="stat-card"><span class="stat-num" data-target="98">0</span><span class="stat-label">Hospitals Connected</span></div>
+      <div class="map-ping">
+        <div class="ping-dot"></div>
+        <div class="ping-ripple"></div>
+        <span>Live Network Active</span>
+      </div>
+    </div>
+    <div class="auth-card">
+      <div class="card-header">
+        <div class="mini-logo">
+          <svg viewBox="0 0 30 40" width="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 2C15 2 3 17 3 25C3 32.2 8.4 38 15 38C21.6 38 27 32.2 27 25C27 17 15 2 15 2Z" fill="#FF3B3B"/>
+          </svg>
+          <span>BloodConnect</span>
+        </div>
+        <h2>Enter Your<br/><strong>Phone Number</strong></h2>
+        <p class="sub">We'll send a verification code to confirm your identity</p>
+      </div>
+
+      <div class="input-section">
+        <label class="input-label">Mobile Number</label>
+        <div class="phone-row">
+          <div class="country-code">
+            <span class="flag">🇮🇳</span>
+            <span>+91</span>
+          </div>
+          <input type="tel" id="phone-input" class="phone-field" placeholder="98765 43210" maxlength="10" pattern="[0-9]{10}"/>
+        </div>
+        <p class="field-hint">Use the number you'll always carry during emergencies</p>
+      </div>
+
+      <button class="btn-primary" id="btn-send-otp" onclick="sendOTP()">
+        <span class="btn-text">Send Verification Code</span>
+        <span class="btn-icon">→</span>
+      </button>
+
+      <div class="divider-text">or continue as</div>
+      <button class="btn-ghost" onclick="demoLogin()">Demo / Guest Preview</button>
+
+      <p class="disclaimer">🔒 Your number is encrypted and never shared with third parties</p>
+    </div>
+  </div>
 </div>
 
-<!-- OTP SCREEN -->
-<div id="otpScreen" class="container">
-    <h2>Enter OTP</h2>
-    <input type="text" id="otp" placeholder="6-digit OTP">
-    <button onclick="verifyOTP()">Verify</button>
+<!-- ══════════════════════════════════════
+     SCREEN 3 — OTP VERIFICATION (L3)
+══════════════════════════════════════ -->
+<div id="screen-otp" class="screen">
+  <div class="auth-layout">
+    <div class="auth-left">
+      <div class="otp-visual">
+        <div class="shield-icon">
+          <svg viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 6L8 18V42C8 60.8 22 76 40 82C58 76 72 60.8 72 42V18L40 6Z" fill="url(#shieldGrad)" stroke="rgba(255,59,59,0.4)" stroke-width="2"/>
+            <path d="M28 42L36 50L52 34" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="check-path"/>
+            <defs>
+              <linearGradient id="shieldGrad" x1="40" y1="6" x2="40" y2="82" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FF3B3B"/>
+                <stop offset="100%" stop-color="#5C0000"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <p class="otp-send-msg">Code sent to <strong id="otp-phone-display">+91 XXXXXXXXXX</strong></p>
+      </div>
+    </div>
+    <div class="auth-card">
+      <div class="card-header">
+        <button class="back-btn" onclick="goBack('screen-phone')">← Back</button>
+        <h2>Verify It's<br/><strong>Really You</strong></h2>
+        <p class="sub">Enter the 6-digit code sent via SMS</p>
+      </div>
+
+      <div class="otp-boxes-wrap">
+        <div class="otp-boxes" id="otp-boxes">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric"/>
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric"/>
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric"/>
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric"/>
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric"/>
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric"/>
+        </div>
+        <div class="otp-status" id="otp-status"></div>
+      </div>
+
+      <div class="timer-row">
+        <span class="timer-label">Code expires in</span>
+        <span class="timer-count" id="otp-timer">60s</span>
+        <span class="attempts-left" id="attempts-left">3 attempts left</span>
+      </div>
+
+      <button class="btn-primary" id="btn-verify" onclick="verifyOTP()">
+        <span class="btn-text">Verify & Continue</span>
+        <span class="btn-icon">✓</span>
+      </button>
+
+      <button class="btn-ghost" id="btn-resend" disabled onclick="resendOTP()">Resend Code</button>
+
+      <div class="security-note">
+        <span class="security-icon">⚡</span>
+        <span>Max 3 attempts allowed for security. OTP expires in 60 seconds.</span>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ROLE SELECTION -->
-<div id="roleScreen" class="container">
-    <h2>Select Role</h2>
-    <button class="role-btn" onclick="setRole('donor')">I am a Donor</button>
-    <button class="role-btn" onclick="setRole('patient')">I am a Hospital/Patient</button>
+<!-- ══════════════════════════════════════
+     SCREEN 4 — RETURNING USER (L7)
+══════════════════════════════════════ -->
+<div id="screen-returning" class="screen">
+  <div class="returning-layout">
+    <div class="returning-card">
+      <div class="welcome-badge">Welcome Back 👋</div>
+      <div class="user-avatar" id="returning-avatar">AB+</div>
+      <h2 id="returning-name">Rahul Sharma</h2>
+      <p class="returning-role" id="returning-role-label">
+        <span class="role-chip donor">🩸 Registered Donor</span>
+      </p>
+      <div class="last-activity">Last active: <strong id="last-active">2 days ago</strong></div>
+
+      <div class="quick-stats">
+        <div class="qs-item">
+          <span class="qs-val">3</span>
+          <span class="qs-key">Donations</span>
+        </div>
+        <div class="qs-item accent">
+          <span class="qs-val">A+</span>
+          <span class="qs-key">Blood Group</span>
+        </div>
+        <div class="qs-item">
+          <span class="qs-val">Active</span>
+          <span class="qs-key">Status</span>
+        </div>
+      </div>
+
+      <div class="redirect-bar">
+        <div class="redirect-fill" id="redirect-fill"></div>
+      </div>
+      <p class="redirect-msg">Redirecting to your dashboard…</p>
+
+      <button class="btn-primary" onclick="goToDashboard()">Go to Dashboard Now →</button>
+    </div>
+  </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="container">
-    <h2>Dashboard</h2>
-    <p id="welcome"></p>
+<!-- ══════════════════════════════════════
+     SCREEN 5 — ROLE LOCK WARNING (L8)
+══════════════════════════════════════ -->
+<div id="screen-rolelock" class="screen">
+  <div class="rolelock-layout">
+    <div class="rolelock-card">
+      <div class="lock-icon-wrap">
+        <div class="lock-pulse"></div>
+        <svg class="lock-icon" viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="28" width="40" height="32" rx="6" fill="url(#lockGrad)" stroke="rgba(255,59,59,0.5)" stroke-width="1.5"/>
+          <path d="M18 28V20C18 12.3 22.7 7 30 7C37.3 7 42 12.3 42 20V28" stroke="#FF3B3B" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="30" cy="44" r="5" fill="white"/>
+          <rect x="28" y="44" width="4" height="8" rx="2" fill="white"/>
+          <defs>
+            <linearGradient id="lockGrad" x1="30" y1="28" x2="30" y2="60" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#2A0A0A"/>
+              <stop offset="100%" stop-color="#1A0505"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <h2>Role Locked 🔒</h2>
+      <p class="rolelock-desc">Your account is permanently registered as a <strong id="locked-role-name">Donor</strong>. For security and data integrity, roles cannot be changed after account creation.</p>
+
+      <div class="lock-reason-cards">
+        <div class="lock-reason">
+          <span class="lr-icon">🏥</span>
+          <div>
+            <strong>Prevents Misuse</strong>
+            <p>Stops bad actors from switching roles to access hospital data</p>
+          </div>
+        </div>
+        <div class="lock-reason">
+          <span class="lr-icon">📋</span>
+          <div>
+            <strong>Audit Trail</strong>
+            <p>Maintains clean records for blood donation history & compliance</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="goBack('screen-phone')">← Start Over with New Number</button>
+      <button class="btn-ghost" onclick="continueLocked()">Continue as <span id="locked-role-btn">Donor</span></button>
+    </div>
+  </div>
 </div>
 
-<script src="script.js"></script>
+<!-- ══════════════════════════════════════
+     TOAST NOTIFICATION
+══════════════════════════════════════ -->
+<div id="toast" class="toast">
+  <span id="toast-icon">✓</span>
+  <span id="toast-msg">Success</span>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
