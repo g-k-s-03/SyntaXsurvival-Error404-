@@ -267,6 +267,23 @@
 
     let timerInterval = null;
     let timerVal = 60;
+    const params = new URLSearchParams(window.location.search);
+    const verifyMode = params.get('mode') === 'verify';
+    const targetRole = params.get('role');
+
+    function initMode() {
+      if (!verifyMode) return;
+      const savedPhone = localStorage.getItem('bc_pending_phone') || '';
+      const title = document.querySelector('.login-title');
+      const hint = document.querySelector('.login-hint');
+      if (title) title.textContent = 'Verify your phone';
+      if (hint) hint.textContent = 'Finish OTP verification to activate your new account';
+      if (savedPhone && savedPhone.length === 10) {
+        const input = document.getElementById('phoneInput');
+        input.value = savedPhone;
+        sendOTP();
+      }
+    }
 
     function toast(msg, type = 'success') {
       const t = document.createElement('div');
@@ -338,6 +355,14 @@
       
       setTimeout(() => {
         const returning = localStorage.getItem('bc_role');
+        if (verifyMode) {
+          localStorage.setItem('bc_verified_phone', 'true');
+          localStorage.removeItem('bc_pending_phone');
+          if (targetRole === 'donor') window.location.href = 'donor-dashboard.html';
+          else if (targetRole === 'hospital') window.location.href = 'hospital-dashboard.html';
+          else window.location.href = 'role.html';
+          return;
+        }
         if (returning === 'donor')    window.location.href = 'donor-dashboard.html';
         else if (returning === 'hospital') window.location.href = 'hospital-dashboard.html';
         else if (returning === 'admin')    window.location.href = 'admin.html';
@@ -355,6 +380,8 @@
         if (e.key === 'Backspace' && !input.value && i > 0) arr[i - 1].focus();
       });
     });
+    initMode();
   </script>
+  <script src="../JS/shared-theme.js"></script>
 </body>
 </html>
