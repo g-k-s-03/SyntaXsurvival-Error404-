@@ -8,19 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
 
-  <!-- ============================================================
-    Commit 17: "feat: map view page layout with donor list sidebar"
-    Author: Person 3 (Frontend – Maps)
-    Date: Hour 24-26
-
-    Commit 18: "feat: Google Maps iframe embed + donor pins data"
-    Author: Person 3 (Frontend – Maps)
-    Date: Hour 26-27
-
-    Commit 19: "feat: distance labels and Google Maps link for navigation"
-    Author: Person 3 (Frontend – Maps)
-    Date: Hour 27
-  ============================================================ -->
+  
 
   <style>
     body { overflow: hidden; }
@@ -78,7 +66,7 @@
       background: #0a0f18;
     }
 
-    /* Fake map grid */
+    
     .fake-map {
       position: absolute; inset: 0;
       background:
@@ -89,7 +77,7 @@
       background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
       background-color: #0a0f18;
     }
-    /* Road-like lines */
+    
     .fake-map::before {
       content: '';
       position: absolute; inset: 0;
@@ -100,10 +88,10 @@
         linear-gradient(transparent 74%, rgba(255,255,255,0.025) 74%, rgba(255,255,255,0.025) 76%, transparent 76%);
     }
 
-    /* Map overlay elements */
+    
     .map-overlay { position: absolute; inset: 0; }
 
-    /* Hospital marker */
+    
     .map-marker {
       position: absolute; transform: translate(-50%, -100%);
       display: flex; flex-direction: column; align-items: center; cursor: pointer;
@@ -121,14 +109,14 @@
     .marker-hospital .marker-icon { background: var(--red); border: 2px solid var(--red-bright); box-shadow: 0 0 16px rgba(200,16,46,0.6); }
     .marker-donor .marker-icon { background: rgba(29,185,84,0.3); border: 2px solid var(--green); box-shadow: 0 0 10px rgba(29,185,84,0.4); }
 
-    /* Radius circle */
+   
     .radius-circle {
       position: absolute; border-radius: 50%;
       border: 1px dashed rgba(200,16,46,0.25);
       transform: translate(-50%, -50%); pointer-events: none;
     }
 
-    /* Map top bar */
+   
     .map-topbar {
       position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
       display: flex; gap: 10px; align-items: center;
@@ -148,7 +136,7 @@
       display: flex; align-items: center; gap: 6px;
     }
 
-    /* Selected donor popup */
+    
     .donor-popup {
       position: absolute; z-index: 20; background: var(--ink-2);
       border: 1px solid var(--border-red); border-radius: var(--radius);
@@ -188,7 +176,7 @@
 
   <div class="map-page">
 
-    <!-- Sidebar (Commit 17) -->
+    
     <div class="map-sidebar">
       <div class="ms-head">
         <div class="ms-title">Donors Near You</div>
@@ -202,7 +190,7 @@
         <div class="filter-chip" onclick="filterMap('nearby', this)">&lt;2km</div>
       </div>
 
-      <!-- Active request highlight -->
+      
       <div style="margin: 0 1.25rem 1rem; padding: 10px 12px; background: rgba(200,16,46,0.06); border: 1px solid var(--border-red); border-radius: var(--radius-sm);">
         <div style="font-size:0.72rem;color:var(--red-bright);font-family:var(--font-mono);font-weight:600;margin-bottom:3px;">🚨 ACTIVE REQUEST</div>
         <div style="font-size:0.82rem;color:var(--text);">O− · 2 units · Kamla Raja</div>
@@ -215,30 +203,30 @@
       </div>
     </div>
 
-    <!-- Map container (Commit 18) -->
+    
     <div class="map-container">
       <div class="fake-map"></div>
       <div class="map-overlay">
 
-        <!-- Top bar -->
+        
         <div class="map-topbar">
           <input class="map-search" placeholder="🔍 Search area or blood group..." />
           <div class="map-badge"><span class="status-dot online"></span> Live · 23 donors</div>
           <div class="map-badge">📍 Gwalior City</div>
         </div>
 
-        <!-- Hospital marker -->
+        
         <div class="map-marker marker-hospital" style="left:48%;top:48%;" onclick="showPopup('Kamla Raja Hospital', 'Request active', 'Hospital', 0)">
           <div class="marker-icon"><span class="marker-icon-inner">🏥</span></div>
           <div class="marker-label">Kamla Raja Hospital ← YOU</div>
         </div>
 
-        <!-- Radius circles -->
+        
         <div class="radius-circle" style="width:140px;height:140px;left:48%;top:48%;border-color:rgba(200,16,46,0.3);"></div>
         <div class="radius-circle" style="width:260px;height:260px;left:48%;top:48%;border-color:rgba(200,16,46,0.15);"></div>
         <div class="radius-circle" style="width:380px;height:380px;left:48%;top:48%;border-color:rgba(200,16,46,0.06);"></div>
 
-        <!-- Donor markers (Commit 19) -->
+       
         <div class="map-marker marker-donor" style="left:38%;top:38%;" onclick="showPopup('Rahul S.', 'O+ · 0.8 km · Available', 'Donor', 0.8)">
           <div class="marker-icon"><span class="marker-icon-inner" style="font-size:0.75rem;font-family:var(--font-mono);color:var(--green);">RS</span></div>
           <div class="marker-label" style="color:var(--green);">O+ · 0.8 km</div>
@@ -260,14 +248,14 @@
           <div class="marker-label">AB+ · 4.8 km · Offline</div>
         </div>
 
-        <!-- Popup -->
+        
         <div class="donor-popup" id="popup" style="left:48%;top:30%;">
           <div id="popupName" style="font-weight:700;color:var(--text);margin-bottom:4px;"></div>
           <div id="popupMeta" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;"></div>
           <a id="mapsLink" href="#" target="_blank" class="btn btn-primary btn-sm" style="font-size:0.75rem;">🗺 Open in Google Maps</a>
         </div>
 
-        <!-- Legend -->
+        
         <div class="legend">
           <div class="leg-item"><div class="leg-dot" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>Available donor</div>
           <div class="leg-item"><div class="leg-dot" style="background:var(--text-muted);"></div>Offline donor</div>
@@ -284,7 +272,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <script>
-    // Commit 17: populate donor list sidebar
+    
     const donors = [
       { init:'RS', name:'Rahul S.',  blood:'O+', dist:0.8, status:'available', area:'Lashkar' },
       { init:'PK', name:'Priya K.',  blood:'O−', dist:1.4, status:'available', area:'City Centre' },
@@ -324,7 +312,7 @@
       renderDonors(f);
     }
 
-    // Commit 19: popup
+    
     function showPopup(name, meta, type, dist) {
       const p = document.getElementById('popup');
       document.getElementById('popupName').textContent = (type === 'Donor' ? '👤 ' : '🏥 ') + name;

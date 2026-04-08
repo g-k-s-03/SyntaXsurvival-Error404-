@@ -8,26 +8,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
 
-  <!-- ============================================================
-    Commit 9:  "feat: donor dashboard layout — sidebar + main grid"
-    Author: Person 2 (Frontend – Donor)
-    Date: Hour 15-16
-
-    Commit 10: "feat: availability toggle with Firebase status update"
-    Author: Person 1 (Backend Lead)
-    Date: Hour 16-17
-
-    Commit 11: "feat: incoming blood request alert card with accept/decline"
-    Author: Person 4 (Notifications)
-    Date: Hour 17-18
-
-    Commit 12: "feat: donation history list with dates and hospital names"
-    Author: Person 2 (Frontend – Donor)
-    Date: Hour 18
-  ============================================================ -->
+ 
+  
 
   <style>
-    /* Profile card */
+    
     .profile-card {
       display: flex; align-items: center; gap: 1.2rem;
       background: var(--surface); border: 1px solid var(--border);
@@ -51,7 +36,7 @@
       border-radius: 40px; padding: 2px 8px; font-family: var(--font-mono);
     }
 
-    /* Availability toggle */
+    
     .avail-wrap { display: flex; align-items: center; gap: 12px; margin-left: auto; }
     .avail-label { font-size: 0.78rem; color: var(--text-muted); }
     .toggle-switch {
@@ -71,7 +56,7 @@
     .toggle-switch input:checked ~ .toggle-track { background: rgba(29,185,84,0.2); border-color: rgba(29,185,84,0.5); }
     .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(22px); background: var(--green); }
 
-    /* Incoming alert */
+    
     .alert-card {
       background: rgba(200,16,46,0.06); border: 1px solid var(--border-red);
       border-radius: var(--radius); padding: 1.5rem;
@@ -114,17 +99,17 @@
     }
     .btn-decline:hover { border-color: var(--border-red); color: var(--red-bright); }
 
-    /* Eligibility countdown */
+    
     .countdown-bar-wrap { margin-top: 0.75rem; }
     .countdown-label { display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 6px; }
     .countdown-bar { height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
     .countdown-fill { height: 100%; border-radius: 4px; background: var(--red-bright); transition: width 1s; }
 
-    /* Nearby requests */
+    
     .nearby-list { display: flex; flex-direction: column; gap: 10px; }
     .nearby-empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem; }
 
-    /* History table */
+    
     .hist-table { width: 100%; border-collapse: collapse; }
     .hist-table th {
       font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.06em;
@@ -134,12 +119,12 @@
     .hist-table td { padding: 12px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.85rem; }
     .hist-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-    /* Section heading */
+    
     .sect-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
     .sect-head h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); }
     .sect-head a  { font-size: 0.78rem; color: var(--red-bright); }
 
-    /* Active section toggling */
+    
     .dash-section { display: none; }
     .dash-section.active { display: block; }
   </style>
@@ -183,10 +168,10 @@
         </div>
       </aside>
 
-      <!-- Main -->
+      
       <main class="dash-main">
 
-        <!-- Profile -->
+        
         <div class="profile-card" data-reveal>
           <div class="profile-avatar" id="avatarEl">RS</div>
           <div class="profile-info">
@@ -207,7 +192,7 @@
           </div>
         </div>
 
-        <!-- Stats -->
+        
         <div class="stats-row" data-reveal data-reveal-delay="1">
           <div class="stat-card">
             <div class="stat-card-label">Total Donations</div>
@@ -231,7 +216,7 @@
           </div>
         </div>
 
-        <!-- Eligibility bar -->
+       
         <div class="card" data-reveal data-reveal-delay="2" style="margin-bottom:1.5rem;">
           <div class="countdown-label">
             <span>56-day donation lock</span>
@@ -243,7 +228,7 @@
           <p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;">You'll be eligible to donate again in approximately 12 days.</p>
         </div>
 
-        <!-- OVERVIEW -->
+       
         <div class="dash-section active" id="section-overview">
 
           <!-- Incoming alert (Commit 11) -->
@@ -266,7 +251,7 @@
             </div>
           </div>
 
-          <!-- Nearby quick list -->
+          
           <div class="sect-head">
             <h3>Nearby Requests</h3>
             <a href="#" onclick="showSection('nearby')">View all →</a>
@@ -299,7 +284,7 @@
           </div>
         </div>
 
-        <!-- ALERTS -->
+        
         <div class="dash-section" id="section-alerts">
           <div class="sect-head"><h3>Incoming Alerts</h3></div>
           <div class="alert-card">
@@ -318,7 +303,7 @@
           </div>
         </div>
 
-        <!-- NEARBY -->
+        
         <div class="dash-section" id="section-nearby">
           <div class="sect-head"><h3>Nearby Requests (5 km)</h3></div>
           <div class="nearby-list">
@@ -349,7 +334,7 @@
           </div>
         </div>
 
-        <!-- HISTORY (Commit 12) -->
+        
         <div class="dash-section" id="section-history">
           <div class="sect-head"><h3>Donation History</h3></div>
           <div class="card">
@@ -373,7 +358,7 @@
           </div>
         </div>
 
-        <!-- SETTINGS -->
+        
         <div class="dash-section" id="section-settings">
           <div class="sect-head"><h3>Settings</h3></div>
           <div class="card">
@@ -407,7 +392,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <script>
-    // Commit 9: load donor data from localStorage
+   
     window.addEventListener('DOMContentLoaded', () => {
       const name  = localStorage.getItem('bc_donor_name') || 'Rahul Sharma';
       const blood = localStorage.getItem('bc_donor_blood') || 'O+';
@@ -416,14 +401,14 @@
       document.getElementById('donorBlood').textContent = blood;
       document.getElementById('bloodVal').textContent = blood;
 
-      // Commit 12: reveal animations
+      
       const obs = new IntersectionObserver(entries => {
         entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
       }, { threshold: 0.1 });
       document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
     });
 
-    // Commit 9: sidebar navigation
+    
     function showSection(id) {
       document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
       document.getElementById('section-' + id).classList.add('active');
@@ -432,7 +417,7 @@
       if (id === 'alerts') document.getElementById('alertBadge').style.display = 'none';
     }
 
-    // Commit 10: availability toggle
+   
     function toggleAvailability() {
       const on = document.getElementById('availToggle').checked;
       const lbl = document.getElementById('availLabel');
@@ -451,7 +436,7 @@
       toast(on ? '✓ You are now visible to hospitals' : 'You are now offline — no alerts will be sent');
     }
 
-    // Commit 11: accept/decline alert
+   
     function acceptAlert() {
       toast('✓ Request accepted! Navigating to hospital...');
       document.getElementById('alertBadge').style.display = 'none';
