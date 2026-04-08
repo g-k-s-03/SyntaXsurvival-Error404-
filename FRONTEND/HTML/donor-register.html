@@ -250,8 +250,8 @@
           <div class="security-item">
             <div class="security-icon si-ok">✓</div>
             <div class="security-body">
-              <h5>Phone Verified</h5>
-              <p>Your phone number was verified via OTP in the previous step.</p>
+              <h5>Phone Verification Required</h5>
+              <p>After registration, you must verify this number via OTP before login.</p>
             </div>
           </div>
           <div class="security-item">
@@ -368,8 +368,9 @@
         localStorage.setItem('bc_role', 'donor');
         localStorage.setItem('bc_donor_blood', selectedBlood || 'O+');
         localStorage.setItem('bc_donor_name', document.getElementById('fname').value || 'Rahul Sharma');
-        toast('Account created successfully! ✓');
-        setTimeout(() => { window.location.href = 'donor-dashboard.html'; }, 1000);
+        localStorage.setItem('bc_pending_phone', (document.getElementById('fphone').value || '').trim());
+        toast('Account created. Verify your phone to continue.');
+        setTimeout(() => { window.location.href = 'login.html?mode=verify&role=donor'; }, 1000);
       }, 1800);
     }
 
@@ -387,5 +388,6 @@
     }, { threshold: 0.1 });
     document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
   </script>
+  <script src="../JS/shared-theme.js"></script>
 </body>
 </html>

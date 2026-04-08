@@ -146,8 +146,9 @@
       setTimeout(() => {
         localStorage.setItem('bc_role', 'hospital');
         localStorage.setItem('bc_hosp_name', name);
-        toast('Hospital registered! ✓');
-        setTimeout(() => { window.location.href = 'hospital-dashboard.html'; }, 1000);
+        localStorage.setItem('bc_pending_phone', phone.replace(/\D/g, '').slice(-10));
+        toast('Hospital registered. Verify your phone to continue.');
+        setTimeout(() => { window.location.href = 'login.html?mode=verify&role=hospital'; }, 1000);
       }, 1800);
     }
 
@@ -161,5 +162,6 @@
     }, { threshold: 0.1 });
     document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
   </script>
+  <script src="../JS/shared-theme.js"></script>
 </body>
 </html>

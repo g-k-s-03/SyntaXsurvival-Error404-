@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LifeLink — Blood Donation Network</title>
+  <title>LifeLink - Blood Donation Network</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../CSS/shared.css" />
   <link rel="stylesheet" href="../CSS/landing.css" />
 </head>
 <body>
+<<<<<<< HEAD
 
  >
   <div class="cursor" id="cursor"></div>
@@ -20,25 +22,22 @@
 
   
   <header class="nav" id="nav">
+=======
+  <header class="nav">
+>>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
     <div class="nav-inner">
-      <a href="#" class="nav-logo">
+      <a href="index.html" class="nav-logo">
         <span class="logo-drop">🩸</span>
-        <span class="logo-text">Life<em>Link</em></span>
+        <span>Life<em>Link</em></span>
       </a>
-      <nav class="nav-links">
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#how" class="nav-link">How it Works</a>
-        <a href="#impact" class="nav-link">Impact</a>
-      </nav>
-      <div class="nav-cta">
-        <a href="role.html" class="btn-nav">Join Now</a>
+      <div class="nav-right">
+        <a href="login.html" class="btn-nav-outline">Login</a>
+        <a href="role.html" class="btn-nav">Get Started</a>
       </div>
-      <button class="hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span>
-      </button>
     </div>
   </header>
 
+<<<<<<< HEAD
   
   <div class="mobile-menu" id="mobileMenu">
     <a href="#features" class="mobile-link" onclick="closeMobile()">Features</a>
@@ -105,8 +104,22 @@
         <a href="hospital-register.html" class="btn-hero-outline">
           <span>Request Blood</span>
         </a>
+=======
+  <main class="minimal-landing page">
+    <section class="hero-minimal">
+      <p class="hero-kicker">Real-time emergency blood matching</p>
+      <h1>Find verified donors in minutes.</h1>
+      <p class="hero-sub">
+        One network for donors, hospitals, and admins. Register, verify your phone, and start saving lives.
+      </p>
+      <div class="hero-actions">
+        <a href="donor-register.html" class="btn btn-primary btn-lg">Register as Donor</a>
+        <a href="hospital-register.html" class="btn btn-secondary btn-lg">Register Hospital</a>
+>>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
       </div>
+    </section>
 
+<<<<<<< HEAD
       
       <div class="hero-trust" data-reveal data-reveal-delay="4">
         <span class="trust-badge">🔒 OTP Verified</span>
@@ -383,7 +396,25 @@
       </div>
     </div>
   </footer>
+=======
+    <section class="minimal-points">
+      <article class="point card">
+        <h3>Verified by OTP</h3>
+        <p>Every new account verifies phone number before access.</p>
+      </article>
+      <article class="point card">
+        <h3>Fast matching</h3>
+        <p>Compatible donors are surfaced by urgency and location.</p>
+      </article>
+      <article class="point card">
+        <h3>Simple workflow</h3>
+        <p>Register, verify, then continue to your role dashboard.</p>
+      </article>
+    </section>
+  </main>
+>>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
 
+  <script src="../JS/shared-theme.js"></script>
   <script src="../JS/landing.js"></script>
 </body>
 </html>
