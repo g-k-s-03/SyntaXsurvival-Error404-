@@ -1,6 +1,4 @@
-/* ══════════════════════════════════════
-   BLOODCONNECT — DESIGN SYSTEM
-══════════════════════════════════════ */
+
 :root {
   --red: #FF3B3B;
   --red-deep: #C0392B;
@@ -40,7 +38,7 @@ html, body {
   overflow: hidden;
 }
 
-/* ── SCREEN SYSTEM ─────────────────── */
+
 .screen {
   position: fixed; inset: 0;
   opacity: 0; pointer-events: none;
@@ -55,9 +53,7 @@ html, body {
   opacity: 0; pointer-events: none;
 }
 
-/* ══════════════════════════════════════
-   SCREEN 1 — SPLASH
-══════════════════════════════════════ */
+
 #screen-splash {
   display: flex;
   flex-direction: column;
@@ -165,7 +161,7 @@ html, body {
   0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
 }
 
-/* ECG LINE */
+
 .ecg-line {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -187,16 +183,13 @@ html, body {
   to { stroke-dashoffset: 0; }
 }
 
-/* ══════════════════════════════════════
-   AUTH LAYOUT (Screens 2 & 3)
-══════════════════════════════════════ */
+
 .auth-layout {
   display: flex;
   align-items: stretch;
   min-height: 100vh;
 }
 
-/* LEFT PANEL */
 .auth-left {
   flex: 1;
   background: linear-gradient(135deg, #0E0202 0%, #180606 50%, #0A0101 100%);
@@ -282,7 +275,7 @@ html, body {
   100% { transform: scale(3); opacity: 0; }
 }
 
-/* OTP LEFT */
+
 .otp-visual {
   display: flex; flex-direction: column;
   align-items: center; gap: 20px;
@@ -314,7 +307,6 @@ html, body {
 }
 .otp-send-msg strong { color: var(--text); }
 
-/* RIGHT AUTH CARD */
 .auth-card {
   width: 460px;
   min-width: 420px;
@@ -381,7 +373,6 @@ html, body {
 }
 .back-btn:hover { color: var(--red); }
 
-/* INPUT FIELD */
 .input-section { display: flex; flex-direction: column; gap: 8px; }
 .input-label {
   font-size: 11px;
@@ -425,7 +416,7 @@ html, body {
   line-height: 1.5;
 }
 
-/* BUTTONS */
+
 .btn-primary {
   display: flex;
   align-items: center;
@@ -512,7 +503,7 @@ html, body {
   line-height: 1.6;
 }
 
-/* OTP BOXES */
+
 .otp-boxes-wrap { display: flex; flex-direction: column; gap: 10px; }
 .otp-boxes {
   display: flex; gap: 10px; justify-content: center;
@@ -566,7 +557,7 @@ html, body {
 .otp-status.error { color: var(--red); }
 .otp-status.success { color: var(--success); }
 
-/* TIMER */
+
 .timer-row {
   display: flex;
   align-items: center;
@@ -604,9 +595,6 @@ html, body {
 }
 .security-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
 
-/* ══════════════════════════════════════
-   SCREEN 4 — RETURNING USER
-══════════════════════════════════════ */
 .returning-layout {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
@@ -744,9 +732,7 @@ html, body {
 }
 .returning-card .btn-primary { width: 100%; }
 
-/* ══════════════════════════════════════
-   SCREEN 5 — ROLE LOCK
-══════════════════════════════════════ */
+
 .rolelock-layout {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
@@ -822,9 +808,7 @@ html, body {
   line-height: 1.5;
 }
 
-/* ══════════════════════════════════════
-   TOAST
-══════════════════════════════════════ */
+
 .toast {
   position: fixed;
   bottom: 32px; right: 32px;
@@ -848,9 +832,7 @@ html, body {
 }
 #toast-icon { font-size: 16px; }
 
-/* ══════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════ */
+
 @media (max-width: 768px) {
   .auth-layout { flex-direction: column; }
   .auth-left {
