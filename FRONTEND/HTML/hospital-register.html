@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Registration — BloodConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 13: "feat: hospital registration form — name, contact, location"
+    Author: Person 3 (Frontend – Maps)
+    Date: Hour 5-7
+  ============================================================ -->
+
+  <style>
+    .reg-page { padding-top: calc(var(--nav-h) + 2rem); padding-bottom: 4rem; }
+    .reg-wrap { max-width: 680px; margin: 0 auto; padding: 0 1.5rem; }
+    .reg-header { text-align: center; margin-bottom: 2.5rem; }
+    .reg-title { font-size: clamp(1.8rem, 3.5vw, 2.4rem); font-weight: 900; color: var(--text); margin-bottom: 0.5rem; }
+    .reg-title em { font-style: italic; color: var(--red-bright); }
+
+    .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; margin-bottom: 1rem; }
+    .form-section-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px; }
+
+    .location-row { display: flex; gap: 10px; }
+    .location-row .form-control { flex: 1; }
+    .locate-btn {
+      padding: 0 16px; border-radius: var(--radius-sm);
+      background: var(--ink-3); border: 1px solid var(--border);
+      color: var(--text-dim); cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .locate-btn:hover { border-color: var(--border-red); color: var(--text); }
+
+    .consent-box { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--ink-3); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; margin-top: 1rem; }
+    .consent-box input { accent-color: var(--red); flex-shrink: 0; margin-top: 2px; }
+    .consent-box label { font-size: 0.82rem; color: var(--text-dim); cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="noise-overlay"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Connect</em></span></a>
+      <div class="nav-right"><a href="role.html" class="btn-nav-outline">← Change role</a></div>
+    </div>
+  </header>
+
+  <div class="reg-page">
+    <div class="reg-wrap">
+
+      <div class="reg-header" data-reveal>
+        <p class="section-label">— Hospital Registration</p>
+        <h1 class="reg-title">Register your<br /><em>hospital</em></h1>
+        <p style="font-size:0.85rem;color:var(--text-muted);">Verified hospitals can request blood and track donors in real time.</p>
+      </div>
+
+      <div class="form-section" data-reveal data-reveal-delay="1">
+        <div class="form-section-title"><span>🏥</span> Hospital Details</div>
+        <div class="form-group">
+          <label class="form-label">Hospital Name <span class="req">*</span></label>
+          <input type="text" class="form-control" id="hname" placeholder="Kamla Raja Government Hospital" />
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Contact Person <span class="req">*</span></label>
+            <input type="text" class="form-control" id="hcontact" placeholder="Dr. Anita Verma" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Designation</label>
+            <input type="text" class="form-control" id="hdesg" placeholder="Blood Bank In-Charge" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone <span class="req">*</span></label>
+            <input type="tel" class="form-control" id="hphone" placeholder="07512 234567" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hospital Type</label>
+            <select class="form-control" id="htype">
+              <option>Government Hospital</option>
+              <option>Private Hospital</option>
+              <option>Nursing Home</option>
+              <option>Clinic</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section" data-reveal data-reveal-delay="2">
+        <div class="form-section-title"><span>📍</span> Location</div>
+        <div class="form-group">
+          <label class="form-label">Address <span class="req">*</span></label>
+          <input type="text" class="form-control" id="haddr" placeholder="Near Phool Bagh, Lashkar" />
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">City <span class="req">*</span></label>
+            <input type="text" class="form-control" id="hcity" placeholder="Gwalior" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Area / Zone</label>
+            <input type="text" class="form-control" id="harea" placeholder="Lashkar" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">GPS Location</label>
+          <div class="location-row">
+            <input type="text" class="form-control" id="hgps" placeholder="Auto-detect or enter coordinates" readonly />
+            <button class="locate-btn" onclick="autoLocate()">📍 Detect GPS</button>
+          </div>
+        </div>
+
+        <div class="consent-box">
+          <input type="checkbox" id="hconsent" />
+          <label for="hconsent">I confirm this hospital is a registered medical institution and agree that misuse of this platform for invalid blood requests will result in account suspension.</label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" onclick="submitHospital()" data-reveal data-reveal-delay="3">
+        Register Hospital →
+      </button>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    // Commit 13: hospital registration submit
+    function autoLocate() {
+      const btn = document.querySelector('.locate-btn');
+      btn.textContent = '⏳ Locating...';
+      setTimeout(() => {
+        document.getElementById('hgps').value = '26.2124° N, 78.1772° E';
+        btn.textContent = '✓ Located';
+        toast('GPS coordinates captured');
+      }, 1500);
+    }
+
+    function submitHospital() {
+      const name = document.getElementById('hname').value.trim();
+      const phone = document.getElementById('hphone').value.trim();
+      if (!name) { toast('Enter hospital name', 'error'); return; }
+      if (!phone) { toast('Enter contact phone', 'error'); return; }
+      if (!document.getElementById('hconsent').checked) { toast('Please confirm consent', 'error'); return; }
+
+      const btn = document.querySelector('.btn-primary');
+      btn.textContent = '⏳ Registering...'; btn.disabled = true;
+      setTimeout(() => {
+        localStorage.setItem('bc_role', 'hospital');
+        localStorage.setItem('bc_hosp_name', name);
+        toast('Hospital registered! ✓');
+        setTimeout(() => { window.location.href = 'hospital-dashboard.html'; }, 1000);
+      }, 1800);
+    }
+
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+      document.getElementById('toasts').appendChild(t); setTimeout(() => t.remove(), 3500);
+    }
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+  </script>
+</body>
+</html>
