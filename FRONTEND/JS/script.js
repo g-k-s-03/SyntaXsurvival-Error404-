@@ -1,9 +1,4 @@
-/* ══════════════════════════════════════
-   BLOODCONNECT — APP LOGIC
-   Features: L1, L2, L3, L7, L8
-══════════════════════════════════════  */
 
-// ── STATE ───────────────────────────
 const state = {
   phone: '',
   generatedOTP: '',
@@ -17,7 +12,7 @@ const state = {
   }
 };
 
-// ── SCREEN MANAGER ──────────────────
+
 function showScreen(id, delay = 0) {
   setTimeout(() => {
     document.querySelectorAll('.screen').forEach(s => {
@@ -35,16 +30,16 @@ function goBack(screenId) {
   showScreen(screenId);
 }
 
-// ── L1: SPLASH ─────────────────────
+
 window.addEventListener('DOMContentLoaded', () => {
-  // Start stat counter animations when phone screen loads
+  
   setTimeout(() => {
     showScreen('screen-phone');
     startCounters();
   }, 2600);
 });
 
-// ── COUNTER ANIMATION ────────────────
+
 function startCounters() {
   document.querySelectorAll('.stat-num[data-target]').forEach(el => {
     const target = parseInt(el.dataset.target);
@@ -61,7 +56,7 @@ function startCounters() {
   });
 }
 
-// ── L2: PHONE LOGIN ─────────────────
+
 function sendOTP() {
   const input = document.getElementById('phone-input');
   const phone = input.value.replace(/\D/g, '');
@@ -74,7 +69,7 @@ function sendOTP() {
 
   state.phone = phone;
 
-  // L7: Check if returning user
+ 
   if (state.knownUsers[phone]) {
     const user = state.knownUsers[phone];
     populateReturningUser(user, phone);
@@ -83,12 +78,12 @@ function sendOTP() {
     return;
   }
 
-  // Generate OTP
+ 
   state.generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
   state.otpAttempts = 0;
   console.info(`[DEV] OTP for +91 ${phone}: ${state.generatedOTP}`); // dev hint
 
-  // Show OTP screen
+
   document.getElementById('otp-phone-display').textContent = `+91 ${phone.replace(/(\d{5})(\d{5})/, '$1 $2')}`;
   showScreen('screen-otp');
   setTimeout(() => {
@@ -100,7 +95,6 @@ function sendOTP() {
   showToast('📲', `OTP sent to +91 ${phone.slice(0,5)}XXXXX`);
 }
 
-// ── L3: OTP VERIFICATION ────────────
 function setupOTPBoxes() {
   const boxes = document.querySelectorAll('.otp-box');
   boxes.forEach((box, i) => {
@@ -170,13 +164,12 @@ function verifyOTP() {
     showToast('✅', 'Identity verified! Welcome to BloodConnect');
 
     setTimeout(() => {
-      // New user → role selection would go here (L4, L5, L6 outside scope)
-      // For demo purposes, show dashboard placeholder
+    
       showNewUserWelcome();
     }, 1200);
 
   } else {
-    // FAILURE
+    
     state.otpAttempts++;
     const remaining = 3 - state.otpAttempts;
     document.querySelectorAll('.otp-box').forEach(b => b.classList.add('error'));
@@ -203,7 +196,7 @@ function verifyOTP() {
   }
 }
 
-// ── OTP TIMER ────────────────────────
+
 function startTimer() {
   state.timerSeconds = 60;
   state.otpAttempts = 0;
@@ -255,7 +248,7 @@ function resendOTP() {
   showToast('📲', `New OTP sent to +91 ${state.phone.slice(0,5)}XXXXX`);
 }
 
-// ── L7: RETURNING USER ───────────────
+
 function populateReturningUser(user, phone) {
   document.getElementById('returning-name').textContent = user.name;
   document.getElementById('last-active').textContent = user.lastActive;
@@ -282,11 +275,10 @@ function startRedirectTimer() {
 function goToDashboard() {
   showToast('🏠', 'Loading your dashboard…');
   setTimeout(() => {
-    showNewUserWelcome(); // placeholder for dashboard
+    showNewUserWelcome(); 
   }, 800);
 }
 
-// ── L8: ROLE LOCK ────────────────────
 function showRoleLock(existingRole) {
   document.getElementById('locked-role-name').textContent =
     existingRole === 'donor' ? 'Donor' : 'Hospital/Patient';
@@ -300,9 +292,8 @@ function continueLocked() {
   setTimeout(showNewUserWelcome, 600);
 }
 
-// ── DEMO DASHBOARD (placeholder) ────
 function showNewUserWelcome() {
-  // Simple success screen – in full app this navigates to main dashboard
+
   document.body.innerHTML += `
   <div id="screen-dashboard" class="screen active" style="
     display:flex; align-items:center; justify-content:center;
@@ -360,14 +351,13 @@ function showNewUserWelcome() {
   </div>`;
 }
 
-// ── DEMO LOGIN ───────────────────────
 function demoLogin() {
   document.getElementById('phone-input').value = '7777777777';
   showToast('🎭', 'Demo mode — use console for OTP');
   setTimeout(sendOTP, 300);
 }
 
-// ── HELPERS ──────────────────────────
+
 function showToast(icon, msg) {
   const toast = document.getElementById('toast');
   document.getElementById('toast-icon').textContent = icon;
@@ -382,11 +372,10 @@ function shakeElement(el) {
   setTimeout(() => el.style.animation = '', 400);
 }
 
-// ── INIT ─────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   setupOTPBoxes();
 
-  // Phone input: only allow digits
+ 
   const phoneInput = document.getElementById('phone-input');
   if (phoneInput) {
     phoneInput.addEventListener('input', e => {
