@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,13 +28,10 @@
 
 html { font-size: 16px; scroll-behavior: smooth; }
 
-=======
->>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
 body {
   cursor: auto;
 }
 
-<<<<<<< HEAD
 .cursor {
   width: 10px; height: 10px;
   background: var(--red-bright);
@@ -172,20 +168,8 @@ p  { color: var(--text-dim); line-height: 1.7; }
   align-items: center; justify-content: center;
   padding: 120px 32px 60px;
   position: relative; overflow: hidden;
-=======
-.minimal-landing {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 4rem 1.5rem 5rem;
 }
 
-.hero-minimal {
->>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
-  text-align: center;
-  padding: 5rem 1rem 3rem;
-}
-
-<<<<<<< HEAD
 .hero-grid {
   position: absolute; inset: 0; z-index: 0;
   background-image:
@@ -274,28 +258,8 @@ p  { color: var(--text-dim); line-height: 1.7; }
   font-style: italic;
   position: relative;
 }
-.accent-line::after {
-  content: attr(data-text);
-  position: absolute; inset: 0;
-=======
-.hero-kicker {
->>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
-  color: var(--red-bright);
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-}
-
-.hero-minimal h1 {
-  font-size: clamp(2rem, 6vw, 3.6rem);
-  color: var(--text);
-  margin-bottom: 1rem;
-}
 
 .hero-sub {
-<<<<<<< HEAD
   font-size: clamp(1rem, 2.5vw, 1.2rem);
   color: var(--text-dim); max-width: 520px;
   margin: 0 auto 2.4rem; line-height: 1.7;
@@ -512,47 +476,163 @@ p  { color: var(--text-dim); line-height: 1.7; }
     translateY(-68px)
     rotate(calc(-1 * var(--a)));
   font-size: 0.65rem; font-weight: 600;
-=======
-  max-width: 650px;
-  margin: 0 auto;
->>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
-  color: var(--text-dim);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
-<<<<<<< HEAD
 .how { padding: 100px 0; background: var(--ink-2); }
 .how-inner { max-width: 900px; margin: 0 auto; padding: 0 32px; }
-=======
-.hero-actions {
-  margin-top: 2rem;
+
+.steps {
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
 }
->>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
-
-.minimal-points {
-  margin-top: 2rem;
+.step {
   display: grid;
-  gap: 0.9rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 72px 1fr;
+  gap: 1.25rem 1.5rem;
+  align-items: start;
+  padding-bottom: 2rem;
+  position: relative;
 }
+.step:last-child { padding-bottom: 0; }
+.step-num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--red-bright);
+  padding-top: 0.2rem;
+}
+.step-body h4 {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+.step-body p {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+.step-line {
+  display: none;
+  position: absolute;
+  left: 36px;
+  top: 2rem;
+  bottom: -0.5rem;
+  width: 1px;
+  background: linear-gradient(var(--border-red), transparent);
+}
+.step:not(:last-child) .step-line { display: block; }
 
-<<<<<<< HEAD
 .roles { padding: 100px 0; background: var(--ink); }
 .roles-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
 .roles-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-=======
+}
+
+a.role-card {
+  background: var(--ink-3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+a.role-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(200,16,46,0.08), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+a.role-card:hover {
+  border-color: var(--border-red);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.35);
+}
+a.role-card:hover::before { opacity: 1; }
+.role-num {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.role-icon-big {
+  font-size: 2.4rem;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(200,16,46,0.1);
+  border: 1px solid var(--border-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+a.role-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+}
+a.role-card > p {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+.role-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.role-list li {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding-left: 1rem;
+  position: relative;
+}
+.role-list li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--red-dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+.role-cta {
+  margin-top: auto;
+  padding-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--red-bright);
+}
+.role-card-mid {
+  border-color: rgba(200,16,46,0.25);
+  background: var(--ink-2);
+}
+
 .point h3 {
   margin-bottom: 0.4rem;
   color: var(--text);
   font-size: 1.05rem;
->>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
 }
 
-<<<<<<< HEAD
 .impact { padding: 120px 0; background: var(--ink-2); }
 .impact-inner {
   max-width: 1200px; margin: 0 auto; padding: 0 32px;
@@ -605,13 +685,58 @@ p  { color: var(--text-dim); line-height: 1.7; }
 }
 .footer-links a:hover { color: var(--red); }
 
+@media (max-width: 768px) {
+  .nav-inner .nav-right { display: none !important; }
+  .nav-inner .hamburger { display: flex !important; }
+}
+
+@media (max-width: 900px) {
+  .impact-inner {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .roles-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 1100px) {
   .hero-float-card { display: none; }
   .features-grid { grid-template-columns: 1fr 1fr; }
   .feat-large { grid-column: span 2; }
 }
-=======
->>>>>>> ad5b442503426acec86f340a659da1659c0aa8d0
+
+.minimal-landing {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 5rem;
+}
+
+.hero-minimal {
+  text-align: center;
+  padding: 5rem 1rem 3rem;
+}
+
+.hero-kicker {
+  color: var(--red-bright);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.hero-minimal h1 {
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.minimal-points {
+  margin-top: 2rem;
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 @media (max-width: 800px) {
   .minimal-points {
     grid-template-columns: 1fr;
