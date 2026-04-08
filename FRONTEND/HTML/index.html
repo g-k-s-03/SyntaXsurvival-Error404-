@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BloodBond</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 1: "feat: add splash screen with logo and auto redirect"
+    Author: Person 2 (Frontend – Donor)
+    Date: Hour 1-2 of hackathon
+  ============================================================ -->
+
+  <style>
+    body { cursor: none; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+
+    /* Background grid */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 80%);
+    }
+    .orb-1, .orb-2 {
+      position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none;
+    }
+    .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(200,16,46,0.2), transparent 70%); top: -200px; right: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(200,16,46,0.1), transparent 70%); bottom: -150px; left: -100px; }
+
+    .splash-wrap {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; gap: 2rem;
+      text-align: center; padding: 2rem;
+    }
+
+    /* Animated blood drop logo */
+    .splash-logo {
+      width: 90px; height: 90px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      background: linear-gradient(160deg, var(--red-bright), var(--red-dim));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem;
+      box-shadow: 0 0 60px rgba(200,16,46,0.5);
+      animation: dropPulse 2s ease-in-out infinite;
+      position: relative;
+    }
+    .splash-logo::after {
+      content: '';
+      position: absolute; inset: -8px; border-radius: inherit;
+      border: 1px solid rgba(200,16,46,0.3);
+      animation: ripple 2s ease-out infinite;
+    }
+    @keyframes dropPulse {
+      0%,100% { transform: scale(1); box-shadow: 0 0 60px rgba(200,16,46,0.4); }
+      50%      { transform: scale(1.06); box-shadow: 0 0 90px rgba(200,16,46,0.7); }
+    }
+    @keyframes ripple {
+      0%   { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    .splash-name {
+      font-family: var(--font-serif); font-size: 3rem; font-weight: 900;
+      color: var(--text); letter-spacing: -0.02em;
+      animation: fadeUp 0.8s 0.2s var(--ease-expo) both;
+    }
+    .splash-name em { font-style: italic; color: var(--red-bright); }
+
+    .splash-tagline {
+      font-size: 0.9rem; color: var(--text-muted); font-family: var(--font-mono);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      animation: fadeUp 0.8s 0.4s var(--ease-expo) both;
+    }
+
+    /* Progress bar */
+    .splash-bar-wrap {
+      width: 200px; height: 2px; background: var(--border); border-radius: 4px; overflow: hidden;
+      animation: fadeUp 0.8s 0.6s var(--ease-expo) both;
+    }
+    .splash-bar {
+      height: 100%; background: var(--red-bright); width: 0%;
+      border-radius: 4px;
+      transition: width 0.05s linear;
+    }
+
+    .splash-sub {
+      font-size: 0.75rem; color: var(--text-muted);
+      animation: fadeUp 0.8s 0.7s var(--ease-expo) both;
+    }
+
+    .hackathon-badge {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+      letter-spacing: 0.06em; opacity: 0.5;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cursor */
+    .cursor { width: 10px; height: 10px; background: var(--red-bright); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); }
+    .cursor-f { width: 32px; height: 32px; border: 1px solid rgba(200,16,46,0.4); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: left 0.12s, top 0.12s; }
+    @media(pointer:coarse){ .cursor,.cursor-f { display:none; } body { cursor:auto; } }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cur"></div>
+  <div class="cursor-f" id="curf"></div>
+  <div class="noise-overlay"></div>
+  <div class="bg-grid"></div>
+  <div class="orb-1"></div>
+  <div class="orb-2"></div>
+
+  <div class="splash-wrap">
+    <div class="splash-logo">🩸</div>
+
+    <h1 class="splash-name">Blood<em>Bond</em></h1>
+
+    <p class="splash-tagline">Real-time · Verified · Life-saving</p>
+
+    <div class="splash-bar-wrap">
+      <div class="splash-bar" id="bar"></div>
+    </div>
+
+    <p class="splash-sub" id="loadMsg">Initialising...</p>
+  </div>
+
+  <p class="hackathon-badge">PS-17 · SyntaXsurvival · TechRhythm 2.0 · ITM Gwalior · April 2026</p>
+
+  <script>
+    // Commit 1: splash auto-redirect logic
+    const bar = document.getElementById('bar');
+    const msg = document.getElementById('loadMsg');
+    const msgs = ['Initialising...', 'Connecting to Firebase...', 'Loading donor database...', 'Ready!'];
+    let pct = 0;
+    const interval = setInterval(() => {
+      pct += 2;
+      bar.style.width = pct + '%';
+      if (pct === 25) msg.textContent = msgs[1];
+      if (pct === 60) msg.textContent = msgs[2];
+      if (pct === 90) msg.textContent = msgs[3];
+      if (pct >= 100) {
+        clearInterval(interval);
+        setTimeout(() => { window.location.href = 'login.html'; }, 400);
+      }
+    }, 40); // ~2 seconds total
+
+    // Cursor
+    const cur = document.getElementById('cur');
+    const curf = document.getElementById('curf');
+    document.addEventListener('mousemove', e => {
+      cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+      curf.style.left = e.clientX + 'px'; curf.style.top = e.clientY + 'px';
+    });
+  </script>
+  <script src="shared-theme.js"></script>
+</body>
+</html>
