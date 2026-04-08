@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donor Dashboard — BloodConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- ============================================================
+    Commit 9:  "feat: donor dashboard layout — sidebar + main grid"
+    Author: Person 2 (Frontend – Donor)
+    Date: Hour 15-16
+
+    Commit 10: "feat: availability toggle with Firebase status update"
+    Author: Person 1 (Backend Lead)
+    Date: Hour 16-17
+
+    Commit 11: "feat: incoming blood request alert card with accept/decline"
+    Author: Person 4 (Notifications)
+    Date: Hour 17-18
+
+    Commit 12: "feat: donation history list with dates and hospital names"
+    Author: Person 2 (Frontend – Donor)
+    Date: Hour 18
+  ============================================================ -->
+
+  <style>
+    /* Profile card */
+    .profile-card {
+      display: flex; align-items: center; gap: 1.2rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .profile-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(200,16,46,0.12); border: 2px solid var(--border-red);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700;
+      color: var(--red-bright); flex-shrink: 0;
+    }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .profile-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+    .verified-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.7rem; color: var(--green); font-weight: 600;
+      background: rgba(29,185,84,0.1); border: 1px solid rgba(29,185,84,0.25);
+      border-radius: 40px; padding: 2px 8px; font-family: var(--font-mono);
+    }
+
+    /* Availability toggle */
+    .avail-wrap { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+    .avail-label { font-size: 0.78rem; color: var(--text-muted); }
+    .toggle-switch {
+      position: relative; width: 48px; height: 26px; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; border-radius: 13px;
+      background: var(--ink-3); border: 1px solid var(--border);
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--text-muted); transition: transform 0.3s, background 0.3s;
+    }
+    .toggle-switch input:checked ~ .toggle-track { background: rgba(29,185,84,0.2); border-color: rgba(29,185,84,0.5); }
+    .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(22px); background: var(--green); }
+
+    /* Incoming alert */
+    .alert-card {
+      background: rgba(200,16,46,0.06); border: 1px solid var(--border-red);
+      border-radius: var(--radius); padding: 1.5rem;
+      margin-bottom: 1.5rem; position: relative; overflow: hidden;
+    }
+    .alert-card::before {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background: linear-gradient(135deg, rgba(200,16,46,0.08), transparent 60%);
+    }
+    .alert-pulse {
+      position: absolute; top: 16px; right: 16px;
+      width: 10px; height: 10px; border-radius: 50%; background: var(--red-bright);
+      animation: alertPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes alertPulse {
+      0%,100%{ box-shadow: 0 0 0 0 rgba(200,16,46,0.5); }
+      50%    { box-shadow: 0 0 0 8px rgba(200,16,46,0); }
+    }
+    .alert-top { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; position: relative; z-index: 1; }
+    .alert-blood-big {
+      font-family: var(--font-serif); font-size: 2.5rem; font-weight: 900;
+      color: var(--red-bright); line-height: 1;
+    }
+    .alert-details { flex: 1; }
+    .alert-hosp { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+    .alert-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .alert-actions { display: flex; gap: 10px; position: relative; z-index: 1; }
+    .btn-accept {
+      flex: 1; padding: 12px; border-radius: var(--radius-sm); border: none;
+      background: rgba(29,185,84,0.15); color: var(--green); font-weight: 700;
+      cursor: pointer; font-family: var(--font-sans); font-size: 0.9rem;
+      border: 1px solid rgba(29,185,84,0.35); transition: all 0.2s;
+    }
+    .btn-accept:hover { background: rgba(29,185,84,0.25); }
+    .btn-decline {
+      flex: 1; padding: 12px; border-radius: var(--radius-sm); border: none;
+      background: rgba(255,255,255,0.04); color: var(--text-muted); font-weight: 600;
+      cursor: pointer; font-family: var(--font-sans); font-size: 0.9rem;
+      border: 1px solid var(--border); transition: all 0.2s;
+    }
+    .btn-decline:hover { border-color: var(--border-red); color: var(--red-bright); }
+
+    /* Eligibility countdown */
+    .countdown-bar-wrap { margin-top: 0.75rem; }
+    .countdown-label { display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 6px; }
+    .countdown-bar { height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .countdown-fill { height: 100%; border-radius: 4px; background: var(--red-bright); transition: width 1s; }
+
+    /* Nearby requests */
+    .nearby-list { display: flex; flex-direction: column; gap: 10px; }
+    .nearby-empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem; }
+
+    /* History table */
+    .hist-table { width: 100%; border-collapse: collapse; }
+    .hist-table th {
+      font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.06em;
+      text-transform: uppercase; font-weight: 600; padding: 10px 12px;
+      border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .hist-table td { padding: 12px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.85rem; }
+    .hist-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Section heading */
+    .sect-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .sect-head h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .sect-head a  { font-size: 0.78rem; color: var(--red-bright); }
+
+    /* Active section toggling */
+    .dash-section { display: none; }
+    .dash-section.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="noise-overlay"></div>
+
+  <!-- Nav -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-drop">🩸</span>
+        <span>Blood<em>Connect</em></span>
+      </a>
+      <div class="nav-right">
+        <span id="navStatus" style="font-size:0.78rem;color:var(--green);display:flex;align-items:center;gap:6px;">
+          <span class="status-dot online"></span> Online
+        </span>
+        <button class="btn-nav-outline" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="dash-layout">
+
+      <!-- Sidebar -->
+      <aside class="dash-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Donor</div>
+          <div class="sidebar-item active" onclick="showSection('overview')"><span class="si-icon">📊</span> Overview</div>
+          <div class="sidebar-item" onclick="showSection('alerts')"><span class="si-icon">🚨</span> Alerts <span id="alertBadge" style="margin-left:auto;background:var(--red);color:#fff;font-size:0.65rem;padding:1px 7px;border-radius:40px;font-family:var(--font-mono);">1</span></div>
+          <div class="sidebar-item" onclick="showSection('nearby')"><span class="si-icon">📍</span> Nearby Requests</div>
+          <div class="sidebar-item" onclick="showSection('history')"><span class="si-icon">📋</span> Donation History</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Account</div>
+          <div class="sidebar-item" onclick="showSection('settings')"><span class="si-icon">⚙️</span> Settings</div>
+          <div class="sidebar-item" onclick="logout()"><span class="si-icon">🚪</span> Logout</div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="dash-main">
+
+        <!-- Profile -->
+        <div class="profile-card" data-reveal>
+          <div class="profile-avatar" id="avatarEl">RS</div>
+          <div class="profile-info">
+            <div class="profile-name" id="donorName">Rahul Sharma</div>
+            <div class="profile-meta">
+              <span id="donorBlood" class="badge badge-critical">O+</span>
+              <span class="verified-badge">✓ VERIFIED</span>
+              <span style="color:var(--text-muted);">Lashkar, Gwalior</span>
+            </div>
+          </div>
+          <div class="avail-wrap">
+            <span class="avail-label" id="availLabel">Online</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="availToggle" checked onchange="toggleAvailability()" />
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" data-reveal data-reveal-delay="1">
+          <div class="stat-card">
+            <div class="stat-card-label">Total Donations</div>
+            <div class="stat-card-val">7</div>
+            <div class="stat-card-sub">Lives saved: ~21</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Blood Group</div>
+            <div class="stat-card-val" id="bloodVal" style="color:var(--red-bright);">O+</div>
+            <div class="stat-card-sub">Universal donor</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Next Eligible</div>
+            <div class="stat-card-val" id="eligDays">12d</div>
+            <div class="stat-card-sub">Last: March 2026</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Alerts Received</div>
+            <div class="stat-card-val">23</div>
+            <div class="stat-card-sub">Accepted: 7</div>
+          </div>
+        </div>
+
+        <!-- Eligibility bar -->
+        <div class="card" data-reveal data-reveal-delay="2" style="margin-bottom:1.5rem;">
+          <div class="countdown-label">
+            <span>56-day donation lock</span>
+            <span id="eligPct">44 / 56 days complete</span>
+          </div>
+          <div class="countdown-bar">
+            <div class="countdown-fill" id="eligBar" style="width:78%;"></div>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;">You'll be eligible to donate again in approximately 12 days.</p>
+        </div>
+
+        <!-- OVERVIEW -->
+        <div class="dash-section active" id="section-overview">
+
+          <!-- Incoming alert (Commit 11) -->
+          <div class="alert-card" data-reveal>
+            <div class="alert-pulse"></div>
+            <div class="alert-top">
+              <div class="alert-blood-big">O<sup style="font-size:1.2rem;">−</sup></div>
+              <div class="alert-details">
+                <div class="alert-hosp">🚨 CRITICAL — Kamla Raja Hospital</div>
+                <div class="alert-meta">2 units needed · 0.8 km away · Gwalior City Centre</div>
+                <div style="margin-top:4px;">
+                  <span class="badge badge-critical">CRITICAL</span>
+                  <span style="font-size:0.72rem;color:var(--text-muted);margin-left:6px;font-family:var(--font-mono);">Alerted 45s ago</span>
+                </div>
+              </div>
+            </div>
+            <div class="alert-actions">
+              <button class="btn-accept" onclick="acceptAlert()">✓ Accept Request</button>
+              <button class="btn-decline" onclick="declineAlert()">✕ Decline</button>
+            </div>
+          </div>
+
+          <!-- Nearby quick list -->
+          <div class="sect-head">
+            <h3>Nearby Requests</h3>
+            <a href="#" onclick="showSection('nearby')">View all →</a>
+          </div>
+          <div class="nearby-list">
+            <div class="req-card critical">
+              <div class="blood-pill">O−</div>
+              <div class="req-card-body">
+                <div class="req-card-title">Kamla Raja Hospital</div>
+                <div class="req-card-meta">
+                  <span>📍 0.8 km</span>
+                  <span>⏱ 45s ago</span>
+                  <span>💉 2 units</span>
+                </div>
+              </div>
+              <span class="badge badge-critical">CRITICAL</span>
+            </div>
+            <div class="req-card urgent">
+              <div class="blood-pill">A+</div>
+              <div class="req-card-body">
+                <div class="req-card-title">City Hospital</div>
+                <div class="req-card-meta">
+                  <span>📍 2.1 km</span>
+                  <span>⏱ 12m ago</span>
+                  <span>💉 1 unit</span>
+                </div>
+              </div>
+              <span class="badge badge-urgent">URGENT</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ALERTS -->
+        <div class="dash-section" id="section-alerts">
+          <div class="sect-head"><h3>Incoming Alerts</h3></div>
+          <div class="alert-card">
+            <div class="alert-pulse"></div>
+            <div class="alert-top">
+              <div class="alert-blood-big">O<sup style="font-size:1.2rem;">−</sup></div>
+              <div class="alert-details">
+                <div class="alert-hosp">🚨 Kamla Raja Hospital</div>
+                <div class="alert-meta">2 units · 0.8 km · Gwalior City Centre</div>
+              </div>
+            </div>
+            <div class="alert-actions">
+              <button class="btn-accept" onclick="acceptAlert()">✓ Accept</button>
+              <button class="btn-decline" onclick="declineAlert()">✕ Decline</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEARBY -->
+        <div class="dash-section" id="section-nearby">
+          <div class="sect-head"><h3>Nearby Requests (5 km)</h3></div>
+          <div class="nearby-list">
+            <div class="req-card critical">
+              <div class="blood-pill">O−</div>
+              <div class="req-card-body">
+                <div class="req-card-title">Kamla Raja Hospital</div>
+                <div class="req-card-meta"><span>📍 0.8 km</span><span>⏱ 1m ago</span><span>💉 2 units</span></div>
+              </div>
+              <span class="badge badge-critical">CRITICAL</span>
+            </div>
+            <div class="req-card urgent">
+              <div class="blood-pill">A+</div>
+              <div class="req-card-body">
+                <div class="req-card-title">City Hospital, Morar</div>
+                <div class="req-card-meta"><span>📍 2.1 km</span><span>⏱ 15m ago</span><span>💉 1 unit</span></div>
+              </div>
+              <span class="badge badge-urgent">URGENT</span>
+            </div>
+            <div class="req-card normal">
+              <div class="blood-pill">B+</div>
+              <div class="req-card-body">
+                <div class="req-card-title">Apollo Hospital</div>
+                <div class="req-card-meta"><span>📍 3.4 km</span><span>⏱ 1h ago</span><span>💉 3 units</span></div>
+              </div>
+              <span class="badge badge-normal">NORMAL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY (Commit 12) -->
+        <div class="dash-section" id="section-history">
+          <div class="sect-head"><h3>Donation History</h3></div>
+          <div class="card">
+            <table class="hist-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Hospital</th>
+                  <th>Blood Group</th>
+                  <th>Units</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>March 12, 2026</td><td>Kamla Raja Hospital</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
+                <tr><td>Jan 14, 2026</td><td>City Hospital, Gwalior</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
+                <tr><td>Nov 08, 2025</td><td>Apollo Hospital</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
+                <tr><td>Sep 03, 2025</td><td>Kamla Raja Hospital</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="dash-section" id="section-settings">
+          <div class="sect-head"><h3>Settings</h3></div>
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">Display Name</label>
+              <input type="text" class="form-control" value="Rahul Sharma" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Alert Radius</label>
+              <select class="form-control">
+                <option>5 km</option>
+                <option>10 km</option>
+                <option>20 km</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">SMS Alerts</label>
+              <select class="form-control">
+                <option>Enabled</option>
+                <option>Disabled</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="toast('Settings saved!')">Save Changes</button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    // Commit 9: load donor data from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const name  = localStorage.getItem('bc_donor_name') || 'Rahul Sharma';
+      const blood = localStorage.getItem('bc_donor_blood') || 'O+';
+      document.getElementById('donorName').textContent = name;
+      document.getElementById('avatarEl').textContent = name.split(' ').map(w=>w[0]).join('').slice(0,2);
+      document.getElementById('donorBlood').textContent = blood;
+      document.getElementById('bloodVal').textContent = blood;
+
+      // Commit 12: reveal animations
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+    });
+
+    // Commit 9: sidebar navigation
+    function showSection(id) {
+      document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + id).classList.add('active');
+      document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+      [...document.querySelectorAll('.sidebar-item')].find(s => s.textContent.toLowerCase().includes(id.slice(0,4)))?.classList.add('active');
+      if (id === 'alerts') document.getElementById('alertBadge').style.display = 'none';
+    }
+
+    // Commit 10: availability toggle
+    function toggleAvailability() {
+      const on = document.getElementById('availToggle').checked;
+      const lbl = document.getElementById('availLabel');
+      const dot = document.querySelector('.status-dot');
+      const navStatus = document.getElementById('navStatus');
+      lbl.textContent = on ? 'Online' : 'Offline';
+      if (on) {
+        dot.className = 'status-dot online';
+        navStatus.style.color = 'var(--green)';
+        navStatus.innerHTML = '<span class="status-dot online"></span> Online';
+      } else {
+        dot.className = 'status-dot offline';
+        navStatus.style.color = 'var(--text-muted)';
+        navStatus.innerHTML = '<span class="status-dot offline"></span> Offline';
+      }
+      toast(on ? '✓ You are now visible to hospitals' : 'You are now offline — no alerts will be sent');
+    }
+
+    // Commit 11: accept/decline alert
+    function acceptAlert() {
+      toast('✓ Request accepted! Navigating to hospital...');
+      document.getElementById('alertBadge').style.display = 'none';
+      setTimeout(() => {
+        // In real app: update Firebase, send SMS confirmation to hospital, open Google Maps
+        alert('In live version: Google Maps link to Kamla Raja Hospital would open here.');
+      }, 1500);
+    }
+    function declineAlert() {
+      toast('Declined — next donor in queue will be alerted', 'error');
+      document.querySelectorAll('.alert-card').forEach(c => c.style.display = 'none');
+    }
+
+    function logout() {
+      localStorage.removeItem('bc_role');
+      window.location.href = 'login.html';
+    }
+
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      document.getElementById('toasts').appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+  </script>
+</body>
+</html>
