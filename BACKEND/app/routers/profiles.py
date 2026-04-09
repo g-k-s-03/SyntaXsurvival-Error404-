@@ -1,9 +1,11 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.audit import write_audit_log
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.donor_profile import DonorProfile
@@ -13,6 +15,10 @@ from app.schemas.profile import DonorProfileCreate, HospitalProfileCreate
 from app.security import normalize_phone
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
+
+
+class DonorAvailabilityUpdate(BaseModel):
+    is_available: bool
 
 
 @router.post("/donor", status_code=status.HTTP_200_OK)
@@ -58,6 +64,40 @@ def upsert_donor_profile(
             setattr(row, k, v)
     db.commit()
     return {"status": "saved"}
+
+
+@router.post("/donor/availability", status_code=status.HTTP_200_OK)
+def update_availability(
+    body: DonorAvailabilityUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    if user.role != UserRole.donor:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only donor accounts can update availability",
+        )
+    row = (
+        db.query(DonorProfile)
+        .filter(DonorProfile.user_id == user.id)
+        .first()
+    )
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Create donor profile before updating availability",
+        )
+    row.is_available = bool(body.is_available)
+    db.commit()
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="donor.availability.update",
+        target_type="user",
+        target_id=str(user.id),
+        meta={"is_available": row.is_available},
+    )
+    return {"status": "updated"}
 
 
 @router.post("/hospital", status_code=status.HTTP_200_OK)

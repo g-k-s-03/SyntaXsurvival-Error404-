@@ -14,6 +14,7 @@ from app.database import Base
 if TYPE_CHECKING:
     from app.models.request_alert import RequestAlert
     from app.models.request_match import RequestMatch
+    from app.models.user import User
 
 
 class RequestStatus(str, enum.Enum):
@@ -92,3 +93,32 @@ class BloodRequest(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+
+    hospital_user: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[hospital_user_id],
+        lazy="joined",
+    )
+
+    accepted_donor_user: Mapped["User | None"] = relationship(
+        "User",
+        foreign_keys=[accepted_donor_user_id],
+        lazy="joined",
+    )
+
+    @property
+    def hospital_facility_name(self) -> str | None:
+        try:
+            hp = getattr(self.hospital_user, "hospital_profile", None)
+            return getattr(hp, "facility_name", None)
+        except Exception:
+            return None
+
+    @property
+    def hospital_city(self) -> str | None:
+        try:
+            hp = getattr(self.hospital_user, "hospital_profile", None)
+            return getattr(hp, "city", None)
+        except Exception:
+            return None
+

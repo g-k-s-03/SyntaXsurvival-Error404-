@@ -6,6 +6,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 
+from app.audit import write_audit_log
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.donor_profile import DonorProfile
@@ -206,6 +207,19 @@ def create_request(
     db.commit()
     req = _get_request_or_404(db, req.id)
     first_wave = ranked_rows[:FIRST_WAVE_SIZE]
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.create",
+        target_type="request",
+        target_id=str(req.id),
+        meta={
+            "blood_group": req.blood_group,
+            "units": req.units,
+            "urgency": req.urgency.value,
+            "status": req.status.value,
+        },
+    )
     return RequestCreateResponse(
         request=RequestPublic.model_validate(req),
         first_wave=[MatchPublic.model_validate(m) for m in first_wave],
@@ -261,6 +275,14 @@ def cancel_request(
     req.cancelled_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(req)
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.cancel",
+        target_type="request",
+        target_id=str(req.id),
+        meta={"status": req.status.value},
+    )
     return RequestPublic.model_validate(req)
 
 
@@ -286,6 +308,14 @@ def fulfill_request(
     req.fulfilled_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(req)
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.fulfill",
+        target_type="request",
+        target_id=str(req.id),
+        meta={"status": req.status.value, "accepted_donor_user_id": str(req.accepted_donor_user_id) if req.accepted_donor_user_id else None},
+    )
     return RequestPublic.model_validate(req)
 
 
@@ -358,6 +388,14 @@ def accept_alert(
     ).update({"status": MatchStatus.declined}, synchronize_session=False)
 
     db.commit()
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="alert.accept",
+        target_type="request",
+        target_id=str(req.id),
+        meta={"request_status": req.status.value},
+    )
     return AlertActionResponse(status="accepted", request_status=req.status)
 
 
@@ -405,4 +443,65 @@ def decline_alert(
     if row and row.status in {MatchStatus.queued, MatchStatus.alerted}:
         row.status = MatchStatus.declined
     db.commit()
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="alert.decline",
+        target_type="request",
+        target_id=str(req.id),
+        meta={"request_status": req.status.value},
+    )
     return AlertActionResponse(status="declined", request_status=req.status)
+
+
+@router.get("/mine", response_model=list[RequestPublic])
+def list_my_requests(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[RequestPublic]:
+    _require_hospital(user)
+    rows = (
+        db.query(BloodRequest)
+        .options(selectinload(BloodRequest.alerts), selectinload(BloodRequest.matches))
+        .filter(BloodRequest.hospital_user_id == user.id)
+        .order_by(BloodRequest.created_at.desc())
+        .all()
+    )
+    return [RequestPublic.model_validate(r) for r in rows]
+
+
+@router.get("/inbox", response_model=list[RequestPublic])
+def list_donor_inbox(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[RequestPublic]:
+    _require_donor(user)
+    req_ids = (
+        db.query(RequestAlert.request_id)
+        .filter(RequestAlert.donor_user_id == user.id)
+        .subquery()
+    )
+    rows = (
+        db.query(BloodRequest)
+        .options(selectinload(BloodRequest.alerts), selectinload(BloodRequest.matches))
+        .filter(BloodRequest.id.in_(req_ids))
+        .order_by(BloodRequest.created_at.desc())
+        .all()
+    )
+    return [RequestPublic.model_validate(r) for r in rows]
+
+
+@router.get("/city", response_model=list[RequestPublic])
+def list_city_requests(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[RequestPublic]:
+    if user.role != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required")
+    rows = (
+        db.query(BloodRequest)
+        .options(selectinload(BloodRequest.alerts), selectinload(BloodRequest.matches))
+        .order_by(BloodRequest.created_at.desc())
+        .all()
+    )
+    return [RequestPublic.model_validate(r) for r in rows]
