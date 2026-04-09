@@ -1,4 +1,6 @@
 from datetime import date, datetime, timezone
+import math
+import re
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,22 +11,79 @@ from app.deps import get_current_user
 from app.models.donor_profile import DonorProfile
 from app.models.request import BloodRequest, RequestStatus
 from app.models.request_alert import AlertStatus, RequestAlert
+from app.models.request_match import MatchStatus, RequestMatch
 from app.models.user import User, UserRole
 from app.schemas.request import (
     AlertActionResponse,
+    MatchPublic,
     RequestCreate,
+    RequestCreateResponse,
     RequestPublic,
 )
 
 router = APIRouter(prefix="/requests", tags=["requests"])
+FIRST_WAVE_SIZE = 5
+COMPATIBILITY_MATRIX: dict[str, dict[str, float]] = {
+    "O-": {"O-": 1.0},
+    "O+": {"O+": 1.0, "O-": 0.95},
+    "A-": {"A-": 1.0, "O-": 0.95},
+    "A+": {"A+": 1.0, "A-": 0.95, "O+": 0.9, "O-": 0.85},
+    "B-": {"B-": 1.0, "O-": 0.95},
+    "B+": {"B+": 1.0, "B-": 0.95, "O+": 0.9, "O-": 0.85},
+    "AB-": {"AB-": 1.0, "A-": 0.92, "B-": 0.92, "O-": 0.88},
+    "AB+": {
+        "AB+": 1.0,
+        "AB-": 0.96,
+        "A+": 0.94,
+        "A-": 0.92,
+        "B+": 0.94,
+        "B-": 0.92,
+        "O+": 0.9,
+        "O-": 0.88,
+    },
+}
 
 
 def _is_donor_eligible(profile: DonorProfile) -> bool:
     if not profile.consent_share:
         return False
+    if not profile.is_available:
+        return False
     if profile.last_donation_date is None:
         return True
     return (date.today() - profile.last_donation_date).days >= 56
+
+
+def _extract_lat_lng(text: str) -> tuple[float, float] | None:
+    m = re.search(r"(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)", text)
+    if not m:
+        return None
+    try:
+        return float(m.group(1)), float(m.group(2))
+    except ValueError:
+        return None
+
+
+def _distance_km(a: tuple[float, float], b: tuple[float, float]) -> float:
+    lat1, lon1 = map(math.radians, a)
+    lat2, lon2 = map(math.radians, b)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    h = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    )
+    return 6371.0 * 2 * math.asin(min(1.0, math.sqrt(h)))
+
+
+def _estimate_distance_km(req_location: str, donor_area: str) -> float | None:
+    req_geo = _extract_lat_lng(req_location)
+    donor_geo = _extract_lat_lng(donor_area)
+    if req_geo and donor_geo:
+        return _distance_km(req_geo, donor_geo)
+    if donor_area.strip().lower() == req_location.strip().lower():
+        return 0.0
+    return None
 
 
 def _require_hospital(user: User) -> None:
@@ -46,7 +105,10 @@ def _require_donor(user: User) -> None:
 def _get_request_or_404(db: Session, request_id: uuid.UUID) -> BloodRequest:
     req = (
         db.query(BloodRequest)
-        .options(selectinload(BloodRequest.alerts))
+        .options(
+            selectinload(BloodRequest.alerts),
+            selectinload(BloodRequest.matches),
+        )
         .filter(BloodRequest.id == request_id)
         .first()
     )
@@ -60,14 +122,14 @@ def _get_request_or_404(db: Session, request_id: uuid.UUID) -> BloodRequest:
 
 @router.post(
     "",
-    response_model=RequestPublic,
+    response_model=RequestCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
 def create_request(
     body: RequestCreate,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> RequestPublic:
+) -> RequestCreateResponse:
     _require_hospital(user)
 
     now = datetime.now(timezone.utc)
@@ -83,31 +145,71 @@ def create_request(
     db.add(req)
     db.flush()
 
-    candidates = (
-        db.query(DonorProfile)
-        .filter(DonorProfile.blood_group == body.blood_group)
-        .filter(DonorProfile.consent_share.is_(True))
-        .all()
+    candidate_bloods = set(
+        COMPATIBILITY_MATRIX.get(body.blood_group, {}).keys()
     )
+    candidates = db.query(DonorProfile).filter(
+        DonorProfile.blood_group.in_(candidate_bloods)
+    ).all()
     eligible = [p for p in candidates if _is_donor_eligible(p)]
 
+    ranked_rows: list[RequestMatch] = []
     if eligible:
+        scored: list[tuple[DonorProfile, float, float, float | None]] = []
+        for profile in eligible:
+            comp = COMPATIBILITY_MATRIX.get(body.blood_group, {}).get(
+                profile.blood_group, 0.0
+            )
+            if comp <= 0:
+                continue
+            dist = _estimate_distance_km(body.location_text, profile.area_text)
+            distance_penalty = (dist * 2.0) if dist is not None else 20.0
+            final = (comp * 100.0) - distance_penalty
+            scored.append((profile, comp * 100.0, final, dist))
+
+        scored.sort(
+            key=lambda row: (
+                -row[2],
+                row[3] if row[3] is not None else float("inf"),
+            )
+        )
+
         req.status = RequestStatus.matched
         req.matched_at = now
-        for profile in eligible[:10]:
+        for idx, (profile, comp_score, final_score, dist) in enumerate(
+            scored, start=1
+        ):
+            match = RequestMatch(
+                request_id=req.id,
+                donor_user_id=profile.user_id,
+                rank=idx,
+                compatibility_score=round(comp_score, 2),
+                distance_km=round(dist, 2) if dist is not None else None,
+                final_score=round(final_score, 2),
+                status=MatchStatus.queued,
+            )
+            db.add(match)
+            ranked_rows.append(match)
+
+        for match in ranked_rows[:FIRST_WAVE_SIZE]:
             db.add(
                 RequestAlert(
                     request_id=req.id,
-                    donor_user_id=profile.user_id,
+                    donor_user_id=match.donor_user_id,
                     status=AlertStatus.alerted,
                 )
             )
+            match.status = MatchStatus.alerted
         req.status = RequestStatus.alerted
         req.alerted_at = now
 
     db.commit()
-    db.refresh(req)
-    return RequestPublic.model_validate(req)
+    req = _get_request_or_404(db, req.id)
+    first_wave = ranked_rows[:FIRST_WAVE_SIZE]
+    return RequestCreateResponse(
+        request=RequestPublic.model_validate(req),
+        first_wave=[MatchPublic.model_validate(m) for m in first_wave],
+    )
 
 
 @router.get("/{request_id}", response_model=RequestPublic)
@@ -222,6 +324,17 @@ def accept_alert(
     now = datetime.now(timezone.utc)
     alert.status = AlertStatus.accepted
     alert.responded_at = now
+    selected_match = (
+        db.query(RequestMatch)
+        .filter(
+            RequestMatch.request_id == req.id,
+            RequestMatch.donor_user_id == user.id,
+        )
+        .first()
+    )
+    if selected_match:
+        selected_match.status = MatchStatus.accepted
+
     req.status = RequestStatus.accepted
     req.accepted_donor_user_id = user.id
     req.accepted_at = now
@@ -238,6 +351,11 @@ def accept_alert(
     for row in others:
         row.status = AlertStatus.declined
         row.responded_at = now
+    db.query(RequestMatch).filter(
+        RequestMatch.request_id == req.id,
+        RequestMatch.donor_user_id != user.id,
+        RequestMatch.status == MatchStatus.alerted,
+    ).update({"status": MatchStatus.declined}, synchronize_session=False)
 
     db.commit()
     return AlertActionResponse(status="accepted", request_status=req.status)
@@ -276,5 +394,15 @@ def decline_alert(
         )
     alert.status = AlertStatus.declined
     alert.responded_at = datetime.now(timezone.utc)
+    row = (
+        db.query(RequestMatch)
+        .filter(
+            RequestMatch.request_id == req.id,
+            RequestMatch.donor_user_id == user.id,
+        )
+        .first()
+    )
+    if row and row.status in {MatchStatus.queued, MatchStatus.alerted}:
+        row.status = MatchStatus.declined
     db.commit()
     return AlertActionResponse(status="declined", request_status=req.status)

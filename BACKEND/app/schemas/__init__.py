@@ -10,7 +10,13 @@ from app.schemas.profile import (
     HospitalProfileCreate,
     HospitalPublic,
 )
-from app.schemas.request import AlertActionResponse, RequestCreate, RequestPublic
+from app.schemas.request import (
+    AlertActionResponse,
+    MatchPublic,
+    RequestCreate,
+    RequestCreateResponse,
+    RequestPublic,
+)
 from app.schemas.user import UserMe, UserPublic
 
 __all__ = [
@@ -26,5 +32,7 @@ __all__ = [
     "HospitalPublic",
     "RequestCreate",
     "RequestPublic",
+    "RequestCreateResponse",
+    "MatchPublic",
     "AlertActionResponse",
 ]
