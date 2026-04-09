@@ -10,17 +10,12 @@ class Settings(BaseSettings):
     secret_key: str = "dev-only-change-in-production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7
-    default_geofence_km: float = 10.0
+    default_geofence_km: float = 25.0
 
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     demo_mode: bool = True
     demo_otp_code: str = "123456"
-    otp_provider: str = "demo"
-    msg91_auth_key: str = ""
-    msg91_template_id: str = ""
-    msg91_sender_id: str = ""
-    default_geofence_km: float = 25.0
 
     @property
     def cors_origin_list(self) -> list[str]:

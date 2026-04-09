@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -8,6 +8,7 @@ from app.config import get_settings
 from app.audit import write_audit_log
 from app.database import get_db
 from app.deps import get_current_user
+from app.matching import COMPATIBILITY_MATRIX, is_donor_eligible
 from app.models.donor_profile import DonorProfile
 from app.models.request import BloodRequest, RequestStatus
 from app.models.request_alert import AlertStatus, RequestAlert
@@ -25,35 +26,6 @@ from app.utils.geofence import estimate_distance_km, is_within_geofence
 router = APIRouter(prefix="/requests", tags=["requests"])
 FIRST_WAVE_SIZE = 5
 settings = get_settings()
-COMPATIBILITY_MATRIX: dict[str, dict[str, float]] = {
-    "O-": {"O-": 1.0},
-    "O+": {"O+": 1.0, "O-": 0.95},
-    "A-": {"A-": 1.0, "O-": 0.95},
-    "A+": {"A+": 1.0, "A-": 0.95, "O+": 0.9, "O-": 0.85},
-    "B-": {"B-": 1.0, "O-": 0.95},
-    "B+": {"B+": 1.0, "B-": 0.95, "O+": 0.9, "O-": 0.85},
-    "AB-": {"AB-": 1.0, "A-": 0.92, "B-": 0.92, "O-": 0.88},
-    "AB+": {
-        "AB+": 1.0,
-        "AB-": 0.96,
-        "A+": 0.94,
-        "A-": 0.92,
-        "B+": 0.94,
-        "B-": 0.92,
-        "O+": 0.9,
-        "O-": 0.88,
-    },
-}
-
-
-def _is_donor_eligible(profile: DonorProfile) -> bool:
-    if not profile.consent_share:
-        return False
-    if not profile.is_available:
-        return False
-    if profile.last_donation_date is None:
-        return True
-    return (date.today() - profile.last_donation_date).days >= 56
 
 
 def _require_hospital(user: User) -> None:
@@ -126,7 +98,7 @@ def create_request(
     eligible = [
         p
         for p in candidates
-        if _is_donor_eligible(p)
+        if is_donor_eligible(p)
         and is_within_geofence(
             center_location=body.location_text,
             target_location=p.area_text,
@@ -194,7 +166,11 @@ def create_request(
         target_id=str(req.id),
         ip=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
-        meta={"blood_group": req.blood_group, "urgency": req.urgency.value, "units": req.units},
+        meta={
+            "blood_group": req.blood_group,
+            "urgency": req.urgency.value,
+            "units": req.units,
+        },
     )
     first_wave = ranked_rows[:FIRST_WAVE_SIZE]
     return RequestCreateResponse(
