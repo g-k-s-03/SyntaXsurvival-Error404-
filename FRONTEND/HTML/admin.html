@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard — BloodConnect</title>
+  <title>General Dashboard — BloodConnect</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
@@ -81,7 +81,8 @@
     <div class="nav-inner">
       <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Connect</em></span></a>
       <div class="nav-right">
-        <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--red-bright);border:1px solid var(--border-red);padding:4px 10px;border-radius:4px;">ADMIN</span>
+        <button type="button" class="theme-toggle" aria-label="Toggle theme">Light mode</button>
+        <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--red-bright);border:1px solid var(--border-red);padding:4px 10px;border-radius:4px;">GENERAL</span>
         <button class="btn-nav-outline" onclick="window.location.href='login.html'">Logout</button>
       </div>
     </div>
@@ -93,7 +94,7 @@
       <!-- Sidebar -->
       <aside class="dash-sidebar">
         <div class="sidebar-section">
-          <div class="sidebar-label">Admin Panel</div>
+          <div class="sidebar-label">General Dashboard</div>
           <div class="sidebar-item active" onclick="showSection('overview')"><span class="si-icon">📊</span> City Overview</div>
           <div class="sidebar-item" onclick="showSection('requests')"><span class="si-icon">🩸</span> Live Requests</div>
           <div class="sidebar-item" onclick="showSection('donors')"><span class="si-icon">👥</span> Donor Management</div>

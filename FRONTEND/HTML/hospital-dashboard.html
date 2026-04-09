@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hospital Dashboard — BloodBond</title>
+  <title>Hospital / Blood Bank Dashboard — BloodBond</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
@@ -171,6 +171,7 @@
     <div class="nav-inner">
       <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Bond</em></span></a>
       <div class="nav-right">
+        <button type="button" class="theme-toggle" aria-label="Toggle theme">Light mode</button>
         <button class="btn-nav" onclick="openModal()">+ Request Blood</button>
         <button class="btn-nav-outline" onclick="logout()">Logout</button>
       </div>
@@ -183,7 +184,7 @@
       
       <aside class="dash-sidebar">
         <div class="sidebar-section">
-          <div class="sidebar-label">Hospital</div>
+          <div class="sidebar-label">Hospital / Blood Bank</div>
           <div class="sidebar-item active" onclick="showSection('active')"><span class="si-icon">📋</span> Active Requests</div>
           <div class="sidebar-item" onclick="showSection('history')"><span class="si-icon">🗂</span> Request History</div>
           <div class="sidebar-item" onclick="showSection('map')"><span class="si-icon">🗺</span> Map View</div>
