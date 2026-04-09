@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/HTML/landing.html", "permanent": false },
+    { "source": "/HTML/landing", "destination": "/HTML/landing.html", "permanent": false },
+    { "source": "/HTML/login", "destination": "/HTML/login.html", "permanent": false },
+    { "source": "/HTML/role", "destination": "/HTML/role.html", "permanent": false }
+  ]
+}
+
