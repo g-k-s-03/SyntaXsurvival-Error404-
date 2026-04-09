@@ -34,6 +34,7 @@ OTP_MAX_SENDS_PER_IP_WINDOW = 20
 
 OTP_FAIL_WINDOW_SECONDS = 10 * 60
 OTP_MAX_FAILS_PER_PHONE_WINDOW = 5
+OTP_MAX_FAILS_PER_IP_WINDOW = 20
 OTP_LOCKOUT_SECONDS = 10 * 60
 
 
@@ -100,21 +101,37 @@ def register_otp_verify_result(db: Session, *, phone: str, ip: str | None, ok: b
 
     if ok:
         phone_rl.failed_verifies_in_window = 0
+        if ip:
+            ip_rl = _get_or_create_rl(db, key_type=OtpKeyType.ip, key=ip)
+            ip_rl.failed_verifies_in_window = 0
         db.commit()
         return
 
     phone_rl.failed_verifies_in_window += 1
     if phone_rl.failed_verifies_in_window >= OTP_MAX_FAILS_PER_PHONE_WINDOW:
         phone_rl.locked_until = now + timedelta(seconds=OTP_LOCKOUT_SECONDS)
+    if ip:
+        ip_rl = _get_or_create_rl(db, key_type=OtpKeyType.ip, key=ip)
+        if _reset_if_window_expired(now, ip_rl.fail_window_started_at, OTP_FAIL_WINDOW_SECONDS):
+            ip_rl.fail_window_started_at = now
+            ip_rl.failed_verifies_in_window = 0
+        ip_rl.failed_verifies_in_window += 1
+        if ip_rl.failed_verifies_in_window >= OTP_MAX_FAILS_PER_IP_WINDOW:
+            ip_rl.locked_until = now + timedelta(seconds=OTP_LOCKOUT_SECONDS)
     db.commit()
 
 
-def enforce_otp_verify_allowed(db: Session, *, phone: str) -> None:
+def enforce_otp_verify_allowed(db: Session, *, phone: str, ip: str | None) -> None:
     now = datetime.now(timezone.utc)
     phone_rl = _get_or_create_rl(db, key_type=OtpKeyType.phone, key=phone)
     if phone_rl.locked_until and phone_rl.locked_until > now:
         remaining = int((phone_rl.locked_until - now).total_seconds())
         raise ValueError(f"Too many failed attempts. Try again in {remaining}s")
+    if ip:
+        ip_rl = _get_or_create_rl(db, key_type=OtpKeyType.ip, key=ip)
+        if ip_rl.locked_until and ip_rl.locked_until > now:
+            remaining = int((ip_rl.locked_until - now).total_seconds())
+            raise ValueError(f"Too many failed attempts from this IP. Try again in {remaining}s")
 
 
 def issue_otp_challenge(db: Session, settings: Settings, phone: str) -> str:
@@ -200,9 +217,20 @@ def get_user_from_token(db: Session, settings: Settings, token: str) -> User | N
     try:
         payload = decode_token(settings, token)
         sub = payload.get("sub")
+        token_phone = payload.get("phone")
+        token_role = payload.get("role")
         if not sub:
             return None
-        return db.query(User).filter(User.id == uuid.UUID(str(sub))).first()
+        user = db.query(User).filter(User.id == uuid.UUID(str(sub))).first()
+        if user is None:
+            return None
+        if token_phone != user.phone:
+            return None
+        if token_role != user.role.value:
+            return None
+        if not user.phone_verified:
+            return None
+        return user
     except (JWTError, ValueError):
         return None
 

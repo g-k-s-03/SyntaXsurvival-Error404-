@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.models.request import RequestStatus, RequestUrgency
 from app.models.request_alert import AlertStatus
 from app.models.request_match import MatchStatus
+from app.sanitization import sanitize_optional_text, sanitize_text
 
 VALID_BLOOD_GROUPS = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"}
 
@@ -24,6 +25,16 @@ class RequestCreate(BaseModel):
         if normalized not in VALID_BLOOD_GROUPS:
             raise ValueError("Invalid blood group")
         return normalized
+
+    @field_validator("location_text")
+    @classmethod
+    def sanitize_location(cls, value: str) -> str:
+        return sanitize_text(value)
+
+    @field_validator("notes")
+    @classmethod
+    def sanitize_notes(cls, value: str | None) -> str | None:
+        return sanitize_optional_text(value)
 
 
 class AlertActionResponse(BaseModel):

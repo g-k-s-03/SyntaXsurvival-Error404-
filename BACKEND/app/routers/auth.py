@@ -91,7 +91,7 @@ def verify_otp_route(
     ip = request.client.host if request.client else None
     ua = request.headers.get("user-agent")
     try:
-        enforce_otp_verify_allowed(db, phone=phone)
+        enforce_otp_verify_allowed(db, phone=phone, ip=ip)
     except ValueError as exc:
         write_audit_log(
             db,

@@ -3,9 +3,10 @@ import math
 import re
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session, selectinload
 
+from app.audit import write_audit_log
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.donor_profile import DonorProfile
@@ -127,6 +128,7 @@ def _get_request_or_404(db: Session, request_id: uuid.UUID) -> BloodRequest:
 )
 def create_request(
     body: RequestCreate,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RequestCreateResponse:
@@ -205,6 +207,16 @@ def create_request(
 
     db.commit()
     req = _get_request_or_404(db, req.id)
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.create",
+        target_type="request",
+        target_id=str(req.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        meta={"blood_group": req.blood_group, "urgency": req.urgency.value, "units": req.units},
+    )
     first_wave = ranked_rows[:FIRST_WAVE_SIZE]
     return RequestCreateResponse(
         request=RequestPublic.model_validate(req),
@@ -237,6 +249,7 @@ def view_request(
 @router.post("/{request_id}/cancel", response_model=RequestPublic)
 def cancel_request(
     request_id: uuid.UUID,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RequestPublic:
@@ -261,12 +274,22 @@ def cancel_request(
     req.cancelled_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(req)
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.cancel",
+        target_type="request",
+        target_id=str(req.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return RequestPublic.model_validate(req)
 
 
 @router.post("/{request_id}/fulfill", response_model=RequestPublic)
 def fulfill_request(
     request_id: uuid.UUID,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RequestPublic:
@@ -286,12 +309,22 @@ def fulfill_request(
     req.fulfilled_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(req)
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.fulfill",
+        target_type="request",
+        target_id=str(req.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return RequestPublic.model_validate(req)
 
 
 @router.post("/{request_id}/accept", response_model=AlertActionResponse)
 def accept_alert(
     request_id: uuid.UUID,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> AlertActionResponse:
@@ -358,12 +391,22 @@ def accept_alert(
     ).update({"status": MatchStatus.declined}, synchronize_session=False)
 
     db.commit()
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.alert.accept",
+        target_type="request",
+        target_id=str(req.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return AlertActionResponse(status="accepted", request_status=req.status)
 
 
 @router.post("/{request_id}/decline", response_model=AlertActionResponse)
 def decline_alert(
     request_id: uuid.UUID,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> AlertActionResponse:
@@ -405,4 +448,13 @@ def decline_alert(
     if row and row.status in {MatchStatus.queued, MatchStatus.alerted}:
         row.status = MatchStatus.declined
     db.commit()
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="request.alert.decline",
+        target_type="request",
+        target_id=str(req.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return AlertActionResponse(status="declined", request_status=req.status)
