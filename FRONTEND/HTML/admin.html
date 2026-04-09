@@ -83,7 +83,7 @@
       <div class="nav-right">
         <button type="button" class="theme-toggle" aria-label="Toggle theme">Light mode</button>
         <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--red-bright);border:1px solid var(--border-red);padding:4px 10px;border-radius:4px;">ADMIN</span>
-        <button class="btn-nav-outline" onclick="window.location.href='login.html'">Logout</button>
+        <button class="btn-nav-outline" onclick="logout()">Logout</button>
       </div>
     </div>
   </header>
@@ -236,7 +236,7 @@
           <div class="broadcast-card">
             <h3>📡 Broadcast to All City Donors</h3>
             <p>Send an emergency SMS to all available donors in Gwalior simultaneously. Use only for mass emergencies.</p>
-            <textarea class="broadcast-input" rows="3" id="broadcastMsg" placeholder="🚨 URGENT: Critical shortage of O− blood across Gwalior hospitals. All O− donors — please report immediately. Call 0751-XXXXXX or open BloodConnect app."></textarea>
+            <textarea class="broadcast-input" rows="3" id="broadcastMsg" placeholder="🚨 URGENT: Critical shortage of O− blood across Gwalior hospitals. All O− donors — please report immediately. Call 0751-XXXXXX or open BloodBond app."></textarea>
             <div class="broadcast-row">
               <select class="form-control" id="broadcastTarget" style="flex:1;">
                 <option>All available donors (34)</option>
@@ -259,7 +259,11 @@
 
   <div class="toast-container" id="toasts"></div>
 
+  <script src="../JS/auth.js"></script>
   <script>
+    if (!Auth.requireRole('admin')) {
+      throw new Error('Unauthorized role for admin dashboard');
+    }
     const dummyDonors = [
       {name:'Rahul Sharma',  blood:'O+',  area:'Lashkar',      status:'available', last:'Mar 12, 2026'},
       {name:'Priya Kumari',  blood:'O−',  area:'City Centre',  status:'available', last:'Jan 8, 2026'},
@@ -319,6 +323,11 @@
       document.getElementById('section-' + id).classList.add('active');
       document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
       [...document.querySelectorAll('.sidebar-item')].find(s => s.textContent.toLowerCase().includes(id.slice(0,4)))?.classList.add('active');
+    }
+
+    function logout() {
+      Auth.clearSession();
+      window.location.href = 'login.html';
     }
 
     function toast(msg, type = 'success') {

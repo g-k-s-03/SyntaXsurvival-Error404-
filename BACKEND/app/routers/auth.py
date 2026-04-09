@@ -36,6 +36,12 @@ def verify_otp_route(body: OtpVerifyRequest, db: Session = Depends(get_db)) -> T
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone must be 10 digits (India)")
     if not verify_otp(db, settings, phone, body.code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP")
-    user = get_or_create_user(db, phone, body.role)
+    try:
+        user = get_or_create_user(db, phone, body.role)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This phone is already registered with a different role",
+        ) from exc
     token = create_access_token(settings, user)
     return TokenResponse(access_token=token, user=UserPublic.model_validate(user))
