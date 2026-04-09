@@ -276,7 +276,7 @@
 
     function initMode() {
       if (!verifyMode) return;
-      const savedPhone = localStorage.getItem('bc_pending_phone') || '';
+      const savedPhone = sessionStorage.getItem('bc_pending_phone') || '';
       const title = document.querySelector('.login-title');
       const hint = document.querySelector('.login-hint');
       if (title) title.textContent = 'Verify your phone';
@@ -305,7 +305,7 @@
       btn.disabled = true;
 
       try {
-        const data = await Auth.post('/auth/otp/send', { phone: phone });
+        const data = await Auth.post('/auth/otp/send', { phone: phone }, false);
         currentPhone = phone;
         document.getElementById('phoneInput').value = phone;
         document.getElementById('phoneStep').style.display = 'none';
@@ -348,7 +348,7 @@
           changeNumber();
           return;
         }
-        const data = await Auth.post('/auth/otp/send', { phone: phone });
+        const data = await Auth.post('/auth/otp/send', { phone: phone }, false);
         toast('OTP resent!');
         if (data && data.demo_otp) {
           toast('Demo OTP: ' + data.demo_otp);
@@ -378,7 +378,7 @@
 
       const roleToVerify =
         targetRole ||
-        localStorage.getItem('bc_pending_role') ||
+        sessionStorage.getItem('bc_pending_role') ||
         localStorage.getItem('bc_role');
 
       if (!roleToVerify) {
@@ -392,16 +392,17 @@
           phone: phone,
           code: digits,
           role: roleToVerify
-        });
+        }, false);
         Auth.saveSession(data.access_token, data.user);
+        await Auth.syncPendingProfile();
+        await Auth.fetchMe();
         clearInterval(timerInterval);
         document.getElementById('verifiedCheck').classList.add('show');
         toast('Phone verified! ✓');
 
         localStorage.setItem('bc_verified_phone', 'true');
-        localStorage.removeItem('bc_pending_hospital_id');
-        localStorage.removeItem('bc_pending_phone');
-        localStorage.removeItem('bc_pending_role');
+        sessionStorage.removeItem('bc_pending_phone');
+        sessionStorage.removeItem('bc_pending_role');
 
         setTimeout(() => {
           window.location.href = Auth.roleHome((data.user && data.user.role) || roleToVerify);

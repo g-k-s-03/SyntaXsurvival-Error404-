@@ -1,4 +1,7 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -13,11 +16,22 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 
 @router.post("/donor", status_code=status.HTTP_200_OK)
+@router.post("/profile/donor", status_code=status.HTTP_200_OK)
 def upsert_donor_profile(
     body: DonorProfileCreate,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
+    if body.last_donation_date is not None:
+        days_since_last = (date.today() - body.last_donation_date).days
+        if days_since_last < 56:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"Donor is not eligible yet, "
+                    f"{56 - days_since_last} day(s) remaining"
+                ),
+            )
     if user.role != UserRole.donor:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -29,7 +43,11 @@ def upsert_donor_profile(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Emergency phone must be 10 digits",
         )
-    row = db.query(DonorProfile).filter(DonorProfile.user_id == user.id).first()
+    row = (
+        db.query(DonorProfile)
+        .filter(DonorProfile.user_id == user.id)
+        .first()
+    )
     data = body.model_dump()
     data["emergency_phone"] = ep
     if row is None:
@@ -43,6 +61,7 @@ def upsert_donor_profile(
 
 
 @router.post("/hospital", status_code=status.HTTP_200_OK)
+@router.post("/profile/hospital", status_code=status.HTTP_200_OK)
 def upsert_hospital_profile(
     body: HospitalProfileCreate,
     user: User = Depends(get_current_user),
@@ -53,7 +72,26 @@ def upsert_hospital_profile(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only hospital accounts can save a hospital profile",
         )
-    row = db.query(HospitalProfile).filter(HospitalProfile.user_id == user.id).first()
+    facility_name_norm = body.facility_name.strip().lower()
+    duplicate = (
+        db.query(HospitalProfile)
+        .filter(
+            func.lower(func.trim(HospitalProfile.facility_name))
+            == facility_name_norm
+        )
+        .filter(HospitalProfile.user_id != user.id)
+        .first()
+    )
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Hospital/Blood bank name already registered",
+        )
+    row = (
+        db.query(HospitalProfile)
+        .filter(HospitalProfile.user_id == user.id)
+        .first()
+    )
     data = body.model_dump()
     if row is None:
         row = HospitalProfile(user_id=user.id, verified=False, **data)
