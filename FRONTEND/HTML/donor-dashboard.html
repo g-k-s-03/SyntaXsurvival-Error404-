@@ -233,106 +233,26 @@
         <div class="dash-section active" id="section-overview">
 
          
-          <div class="alert-card" data-reveal>
-            <div class="alert-pulse"></div>
-            <div class="alert-top">
-              <div class="alert-blood-big">O<sup style="font-size:1.2rem;">−</sup></div>
-              <div class="alert-details">
-                <div class="alert-hosp">🚨 CRITICAL — Kamla Raja Hospital</div>
-                <div class="alert-meta">2 units needed · 0.8 km away · Gwalior City Centre</div>
-                <div style="margin-top:4px;">
-                  <span class="badge badge-critical">CRITICAL</span>
-                  <span style="font-size:0.72rem;color:var(--text-muted);margin-left:6px;font-family:var(--font-mono);">Alerted 45s ago</span>
-                </div>
-              </div>
-            </div>
-            <div class="alert-actions">
-              <button class="btn-accept" onclick="acceptAlert()">✓ Accept Request</button>
-              <button class="btn-decline" onclick="declineAlert()">✕ Decline</button>
-            </div>
-          </div>
+          <div id="overviewAlert"></div>
 
           
           <div class="sect-head">
             <h3>Nearby Requests</h3>
             <a href="#" onclick="showSection('nearby')">View all →</a>
           </div>
-          <div class="nearby-list">
-            <div class="req-card critical">
-              <div class="blood-pill">O−</div>
-              <div class="req-card-body">
-                <div class="req-card-title">Kamla Raja Hospital</div>
-                <div class="req-card-meta">
-                  <span>📍 0.8 km</span>
-                  <span>⏱ 45s ago</span>
-                  <span>💉 2 units</span>
-                </div>
-              </div>
-              <span class="badge badge-critical">CRITICAL</span>
-            </div>
-            <div class="req-card urgent">
-              <div class="blood-pill">A+</div>
-              <div class="req-card-body">
-                <div class="req-card-title">City Hospital</div>
-                <div class="req-card-meta">
-                  <span>📍 2.1 km</span>
-                  <span>⏱ 12m ago</span>
-                  <span>💉 1 unit</span>
-                </div>
-              </div>
-              <span class="badge badge-urgent">URGENT</span>
-            </div>
-          </div>
+          <div class="nearby-list" id="nearbyList"></div>
         </div>
 
         
         <div class="dash-section" id="section-alerts">
           <div class="sect-head"><h3>Incoming Alerts</h3></div>
-          <div class="alert-card">
-            <div class="alert-pulse"></div>
-            <div class="alert-top">
-              <div class="alert-blood-big">O<sup style="font-size:1.2rem;">−</sup></div>
-              <div class="alert-details">
-                <div class="alert-hosp">🚨 Kamla Raja Hospital</div>
-                <div class="alert-meta">2 units · 0.8 km · Gwalior City Centre</div>
-              </div>
-            </div>
-            <div class="alert-actions">
-              <button class="btn-accept" onclick="acceptAlert()">✓ Accept</button>
-              <button class="btn-decline" onclick="declineAlert()">✕ Decline</button>
-            </div>
-          </div>
+          <div id="alertsList"></div>
         </div>
 
         
         <div class="dash-section" id="section-nearby">
           <div class="sect-head"><h3>Nearby Requests (5 km)</h3></div>
-          <div class="nearby-list">
-            <div class="req-card critical">
-              <div class="blood-pill">O−</div>
-              <div class="req-card-body">
-                <div class="req-card-title">Kamla Raja Hospital</div>
-                <div class="req-card-meta"><span>📍 0.8 km</span><span>⏱ 1m ago</span><span>💉 2 units</span></div>
-              </div>
-              <span class="badge badge-critical">CRITICAL</span>
-            </div>
-            <div class="req-card urgent">
-              <div class="blood-pill">A+</div>
-              <div class="req-card-body">
-                <div class="req-card-title">City Hospital, Morar</div>
-                <div class="req-card-meta"><span>📍 2.1 km</span><span>⏱ 15m ago</span><span>💉 1 unit</span></div>
-              </div>
-              <span class="badge badge-urgent">URGENT</span>
-            </div>
-            <div class="req-card normal">
-              <div class="blood-pill">B+</div>
-              <div class="req-card-body">
-                <div class="req-card-title">Apollo Hospital</div>
-                <div class="req-card-meta"><span>📍 3.4 km</span><span>⏱ 1h ago</span><span>💉 3 units</span></div>
-              </div>
-              <span class="badge badge-normal">NORMAL</span>
-            </div>
-          </div>
+          <div class="nearby-list" id="nearbyAllList"></div>
         </div>
 
         
@@ -349,12 +269,7 @@
                   <th>Status</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr><td>March 12, 2026</td><td>Kamla Raja Hospital</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
-                <tr><td>Jan 14, 2026</td><td>City Hospital, Gwalior</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
-                <tr><td>Nov 08, 2025</td><td>Apollo Hospital</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
-                <tr><td>Sep 03, 2025</td><td>Kamla Raja Hospital</td><td><span class="badge badge-critical">O+</span></td><td>1</td><td><span class="badge badge-success">Fulfilled</span></td></tr>
-              </tbody>
+              <tbody id="historyTbody"></tbody>
             </table>
           </div>
         </div>
@@ -394,17 +309,10 @@
 
   <script src="../JS/auth.js"></script>
   <script>
-    if (!Auth.requireRole('donor')) {
-      throw new Error('Unauthorized role for donor dashboard');
-    }
+    Auth.enforceRole('donor');
    
     window.addEventListener('DOMContentLoaded', () => {
-      const name  = localStorage.getItem('bc_donor_name') || 'Rahul Sharma';
-      const blood = localStorage.getItem('bc_donor_blood') || 'O+';
-      document.getElementById('donorName').textContent = name;
-      document.getElementById('avatarEl').textContent = name.split(' ').map(w=>w[0]).join('').slice(0,2);
-      document.getElementById('donorBlood').textContent = blood;
-      document.getElementById('bloodVal').textContent = blood;
+      initDonorDashboard();
 
       
       const obs = new IntersectionObserver(entries => {
@@ -423,7 +331,7 @@
     }
 
    
-    function toggleAvailability() {
+    async function toggleAvailability() {
       const on = document.getElementById('availToggle').checked;
       const lbl = document.getElementById('availLabel');
       const dot = document.querySelector('.status-dot');
@@ -438,21 +346,32 @@
         navStatus.style.color = 'var(--text-muted)';
         navStatus.innerHTML = '<span class="status-dot offline"></span> Offline';
       }
-      toast(on ? '✓ You are now visible to hospitals' : 'You are now offline — no alerts will be sent');
+      try {
+        await Auth.apiFetch('/profiles/donor/availability', { method: 'POST', body: { is_available: on }, withAuth: true });
+        toast(on ? '✓ You are now visible to hospitals' : 'You are now offline — no alerts will be sent');
+      } catch (e) {
+        toast(e.message || 'Failed to update availability', 'error');
+      }
     }
 
    
-    function acceptAlert() {
-      toast('✓ Request accepted! Navigating to hospital...');
-      document.getElementById('alertBadge').style.display = 'none';
-      setTimeout(() => {
-        // In real app: update Firebase, send SMS confirmation to hospital, open Google Maps
-        alert('In live version: Google Maps link to Kamla Raja Hospital would open here.');
-      }, 1500);
+    async function acceptAlert(requestId) {
+      try {
+        await Auth.apiFetch(`/requests/${requestId}/accept`, { method: 'POST', withAuth: true });
+        toast('✓ Request accepted!');
+        await refreshDonorData();
+      } catch (e) {
+        toast(e.message || 'Failed to accept', 'error');
+      }
     }
-    function declineAlert() {
-      toast('Declined — next donor in queue will be alerted', 'error');
-      document.querySelectorAll('.alert-card').forEach(c => c.style.display = 'none');
+    async function declineAlert(requestId) {
+      try {
+        await Auth.apiFetch(`/requests/${requestId}/decline`, { method: 'POST', withAuth: true });
+        toast('Declined — next donor in queue will be alerted', 'error');
+        await refreshDonorData();
+      } catch (e) {
+        toast(e.message || 'Failed to decline', 'error');
+      }
     }
 
     function logout() {
@@ -466,6 +385,137 @@
       t.textContent = msg;
       document.getElementById('toasts').appendChild(t);
       setTimeout(() => t.remove(), 3500);
+    }
+
+    let donorMe = null;
+    let donorPoll = null;
+
+    function fmtAgo(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      const s = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
+      if (s < 60) return s + 's ago';
+      const m = Math.floor(s / 60);
+      if (m < 60) return m + 'm ago';
+      const h = Math.floor(m / 60);
+      if (h < 48) return h + 'h ago';
+      const days = Math.floor(h / 24);
+      return days + 'd ago';
+    }
+
+    function bloodSup(bg) {
+      return String(bg || '').replace('-', '<sup style="font-size:1.2rem;">−</sup>').replace('+', '<sup style="font-size:1.2rem;">+</sup>');
+    }
+
+    function urgencyBadge(u) {
+      const v = (u || '').toLowerCase();
+      if (v === 'critical') return '<span class="badge badge-critical">CRITICAL</span>';
+      if (v === 'urgent') return '<span class="badge badge-urgent">URGENT</span>';
+      return '<span class="badge badge-normal">NORMAL</span>';
+    }
+
+    function hospName(req) {
+      return req.hospital_facility_name || ('Hospital ' + String(req.hospital_user_id || '').slice(0, 6));
+    }
+
+    function renderAlertCard(req) {
+      const blood = (req.blood_group || '').replace('−','-');
+      return `
+        <div class="alert-card" data-reveal>
+          <div class="alert-pulse"></div>
+          <div class="alert-top">
+            <div class="alert-blood-big">${bloodSup(blood)}</div>
+            <div class="alert-details">
+              <div class="alert-hosp">🚨 ${String(req.urgency || '').toUpperCase()} — ${hospName(req)}</div>
+              <div class="alert-meta">${req.units} unit(s) needed · ${req.location_text || ''}</div>
+              <div style="margin-top:4px;">
+                ${urgencyBadge(req.urgency)}
+                <span style="font-size:0.72rem;color:var(--text-muted);margin-left:6px;font-family:var(--font-mono);">Alerted ${fmtAgo(req.alerted_at || req.created_at)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="alert-actions">
+            <button class="btn-accept" onclick="acceptAlert('${req.id}')">✓ Accept</button>
+            <button class="btn-decline" onclick="declineAlert('${req.id}')">✕ Decline</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderNearbyRow(req) {
+      const cls = (req.urgency || 'normal').toLowerCase();
+      return `
+        <div class="req-card ${cls}">
+          <div class="blood-pill">${(req.blood_group || '').replace('-', '−')}</div>
+          <div class="req-card-body">
+            <div class="req-card-title">${hospName(req)}</div>
+            <div class="req-card-meta">
+              <span>⏱ ${fmtAgo(req.created_at)}</span>
+              <span>💉 ${req.units} unit</span>
+            </div>
+          </div>
+          ${urgencyBadge(req.urgency)}
+        </div>
+      `;
+    }
+
+    function renderHistoryRow(req) {
+      const dt = req.fulfilled_at || req.accepted_at || req.created_at;
+      const dateStr = dt ? new Date(dt).toLocaleDateString() : '—';
+      const status = (req.status || '').toLowerCase();
+      const badge =
+        status === 'fulfilled' ? '<span class="badge badge-success">Fulfilled</span>' :
+        status === 'cancelled' ? '<span class="badge badge-muted">Cancelled</span>' :
+        status === 'accepted' ? '<span class="badge badge-urgent">Accepted</span>' :
+        '<span class="badge badge-muted">' + (req.status || '—') + '</span>';
+      return `<tr>
+        <td>${dateStr}</td>
+        <td>${hospName(req)}</td>
+        <td><span class="badge badge-critical">${(req.blood_group || '').replace('-', '−')}</span></td>
+        <td>${req.units}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }
+
+    async function initDonorDashboard() {
+      await refreshDonorData();
+      if (donorPoll) clearInterval(donorPoll);
+      donorPoll = setInterval(refreshDonorData, 15000);
+    }
+
+    async function refreshDonorData() {
+      try {
+        const me = await Auth.apiFetch('/me', { method: 'GET', withAuth: true });
+        donorMe = me;
+        const prof = me.donor_profile || {};
+        const name = prof.full_name || (me.user && me.user.phone) || 'Donor';
+        const blood = prof.blood_group || '—';
+        document.getElementById('donorName').textContent = name;
+        document.getElementById('avatarEl').textContent = String(name).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        document.getElementById('donorBlood').textContent = blood;
+        document.getElementById('bloodVal').textContent = blood;
+        document.getElementById('availToggle').checked = !!prof.is_available;
+        document.getElementById('availLabel').textContent = prof.is_available ? 'Online' : 'Offline';
+
+        const inbox = await Auth.apiFetch('/requests/inbox', { method: 'GET', withAuth: true });
+        const myId = me.user && me.user.id;
+        const alerts = (inbox || []).filter(r => (r.status === 'alerted'));
+        const history = (inbox || []).filter(r => r.accepted_donor_user_id === myId || r.status === 'fulfilled' || r.status === 'cancelled');
+
+        document.getElementById('alertBadge').textContent = String(alerts.length);
+        document.getElementById('alertBadge').style.display = alerts.length ? 'inline-flex' : 'none';
+
+        document.getElementById('overviewAlert').innerHTML = alerts[0] ? renderAlertCard(alerts[0]) : '<div class="card"><div class="nearby-empty">No active alerts right now.</div></div>';
+        document.getElementById('alertsList').innerHTML = alerts.length ? alerts.map(renderAlertCard).join('') : '<div class="card"><div class="nearby-empty">No incoming alerts.</div></div>';
+
+        const nearby = (inbox || []).filter(r => r.status === 'alerted' || r.status === 'matched' || r.status === 'submitted').slice(0, 5);
+        document.getElementById('nearbyList').innerHTML = nearby.length ? nearby.map(renderNearbyRow).join('') : '<div class="nearby-empty">No nearby requests right now.</div>';
+        document.getElementById('nearbyAllList').innerHTML = nearby.length ? nearby.map(renderNearbyRow).join('') : '<div class="nearby-empty">No nearby requests right now.</div>';
+
+        document.getElementById('historyTbody').innerHTML = history.length ? history.slice(0, 20).map(renderHistoryRow).join('') : '<tr><td colspan="5" style="color:var(--text-muted);padding:16px;">No history yet.</td></tr>';
+      } catch (e) {
+        console.error(e);
+      }
     }
   </script>
   <script src="../JS/shared-theme.js"></script>

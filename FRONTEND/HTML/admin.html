@@ -261,61 +261,43 @@
 
   <script src="../JS/auth.js"></script>
   <script>
-    if (!Auth.requireRole('admin')) {
-      throw new Error('Unauthorized role for admin dashboard');
-    }
-    const dummyDonors = [
-      {name:'Rahul Sharma',  blood:'O+',  area:'Lashkar',      status:'available', last:'Mar 12, 2026'},
-      {name:'Priya Kumari',  blood:'O−',  area:'City Centre',  status:'available', last:'Jan 8, 2026'},
-      {name:'Amit Verma',    blood:'A+',  area:'Morar',        status:'available', last:'Feb 20, 2026'},
-      {name:'Sunita Rao',    blood:'B+',  area:'Thatipur',     status:'available', last:'Dec 5, 2025'},
-      {name:'Mohit Khan',    blood:'AB+', area:'Hazira',       status:'available', last:'Nov 14, 2025'},
-      {name:'Dev Kapoor',    blood:'AB+', area:'Gwalior Fort', status:'offline',   last:'Oct 3, 2025'},
-      {name:'Neha Joshi',    blood:'A−',  area:'Padav',        status:'available', last:'Mar 1, 2026'},
-      {name:'Raj Gupta',     blood:'B−',  area:'Gola Ka Mandir',status:'available',last:'Feb 10, 2026'},
-      {name:'Divya Mishra',  blood:'O+',  area:'Lashkar',      status:'locked',    last:'Mar 5, 2026'},
-      {name:'Arjun Singh',   blood:'A+',  area:'City Centre',  status:'available', last:'Jan 20, 2026'},
-      {name:'Kavita Sharma', blood:'B+',  area:'Morar',        status:'available', last:'Dec 18, 2025'},
-      {name:'Ravi Tiwari',   blood:'O−',  area:'Hazira',       status:'available', last:'Nov 30, 2025'},
-      {name:'Suman Pathak',  blood:'AB−', area:'Thatipur',     status:'locked',    last:'Mar 10, 2026'},
-      {name:'Vikram Yadav',  blood:'O+',  area:'Padav',        status:'available', last:'Feb 1, 2026'},
-      {name:'Anita Dubey',   blood:'A+',  area:'Lashkar',      status:'available', last:'Jan 5, 2026'},
-    ];
-    const extras = ['B+','A+','O+','AB+','B−','O+','A−','B+','O+','A+','O−','B+','A+','O+','AB+','B+','O+','A+','O+','B+','A+','O+','AB−','B+','O+','A+','O+','B+','A+','O+','A−','B+','O+','AB+','B+'];
-    const eAreas = ['Lashkar','Morar','Thatipur','Hazira','Padav','City Centre','Gola Ka Mandir','Gwalior Fort'];
-    for (let i = 0; i < 35; i++) {
-      dummyDonors.push({ name:'Donor '+(i+16), blood:extras[i], area:eAreas[i%eAreas.length], status:i%7===0?'offline':i%5===0?'locked':'available', last:'2025' });
-    }
+    Auth.enforceRole('admin');
+
+    let donorsCache = [];
 
     function renderDonors(data) {
       const tb = document.getElementById('donorTbody');
       tb.innerHTML = data.map(d => `
         <tr>
-          <td style="font-weight:600;">${d.name}</td>
-          <td><span class="badge badge-critical">${d.blood}</span></td>
-          <td style="color:var(--text-muted);">${d.area}</td>
+          <td style="font-weight:600;">${d.full_name}</td>
+          <td><span class="badge badge-critical">${(d.blood_group||'').replace('-', '−')}</span></td>
+          <td style="color:var(--text-muted);">${d.area_text || ''}</td>
           <td>${d.status==='available'?'<span class="badge badge-success">Available</span>':d.status==='locked'?'<span class="badge badge-urgent">56d Lock</span>':'<span class="badge badge-muted">Offline</span>'}</td>
-          <td style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.75rem;">${d.last}</td>
+          <td style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.75rem;">${d.last_donation_date || '—'}</td>
           <td style="display:flex;gap:6px;">
-            <button class="action-btn verify" onclick="toast('✓ Donor verified')">Verify</button>
-            <button class="action-btn suspend" onclick="toast('Donor suspended','error')">Suspend</button>
+            <button class="action-btn verify" onclick="verifyDonor('${d.user_id}')">Verify</button>
+            <button class="action-btn suspend" onclick="suspendDonor('${d.user_id}')">Suspend</button>
           </td>
         </tr>`).join('');
     }
-    renderDonors(dummyDonors);
 
     function filterDonors(q) {
-      renderDonors(dummyDonors.filter(d => d.name.toLowerCase().includes(q.toLowerCase()) || d.blood.toLowerCase().includes(q.toLowerCase())));
+      renderDonors(donorsCache.filter(d => (d.full_name||'').toLowerCase().includes(q.toLowerCase()) || (d.blood_group||'').toLowerCase().includes(q.toLowerCase())));
     }
     function filterBlood(bg) {
-      renderDonors(bg ? dummyDonors.filter(d => d.blood === bg || d.blood === bg.replace('−','-')) : dummyDonors);
+      renderDonors(bg ? donorsCache.filter(d => d.blood_group === bg || d.blood_group === bg.replace('−','-')) : donorsCache);
     }
 
-    function sendBroadcast() {
+    async function sendBroadcast() {
       const msg = document.getElementById('broadcastMsg').value.trim();
       if (!msg) { toast('Enter broadcast message', 'error'); return; }
       const target = document.getElementById('broadcastTarget').value;
-      setTimeout(() => { toast(`📡 Emergency broadcast sent to "${target}" via Twilio SMS`); }, 800);
+      try {
+        const res = await Auth.apiFetch('/admin/broadcast', { method: 'POST', withAuth: true, body: { message: msg, target: target } });
+        toast(`📡 Broadcast queued to "${res.target}" (${res.recipients} recipients)`);
+      } catch (e) {
+        toast(e.message || 'Broadcast failed', 'error');
+      }
     }
 
     function showSection(id) {
@@ -339,6 +321,105 @@
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
     }, { threshold: 0.1 });
     document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+
+    function fmtAgo(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      const s = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
+      if (s < 60) return s + 's ago';
+      const m = Math.floor(s / 60);
+      if (m < 60) return m + 'm ago';
+      const h = Math.floor(m / 60);
+      if (h < 48) return h + 'h ago';
+      const days = Math.floor(h / 24);
+      return days + 'd ago';
+    }
+
+    function urgencyBadge(u) {
+      const v = (u || '').toLowerCase();
+      if (v === 'critical') return '<span class="badge badge-critical">CRITICAL</span>';
+      if (v === 'urgent') return '<span class="badge badge-urgent">URGENT</span>';
+      return '<span class="badge badge-normal">NORMAL</span>';
+    }
+
+    function hospName(req) {
+      return req.hospital_facility_name || ('Hospital ' + String(req.hospital_user_id || '').slice(0, 6));
+    }
+
+    function renderCityReqRow(req) {
+      return `
+        <div class="live-req-row">
+          <div class="blood-pill" style="width:40px;height:40px;">${(req.blood_group||'').replace('-', '−')}</div>
+          <div class="lrr-body"><div class="lrr-title">${hospName(req)} · ${(req.urgency||'').charAt(0).toUpperCase()+String(req.urgency||'').slice(1)} · ${req.units} unit(s)</div><div class="lrr-meta">${req.hospital_city || ''} · ${fmtAgo(req.created_at)} · Status: ${req.status}</div></div>
+          ${urgencyBadge(req.urgency)}
+        </div>
+      `;
+    }
+
+    async function verifyDonor(userId) {
+      try {
+        await Auth.apiFetch(`/admin/donors/${userId}/verify`, { method: 'POST', withAuth: true });
+        toast('✓ Donor verified');
+      } catch (e) {
+        toast(e.message || 'Verify failed', 'error');
+      }
+    }
+
+    async function suspendDonor(userId) {
+      try {
+        await Auth.apiFetch(`/admin/donors/${userId}/suspend`, { method: 'POST', withAuth: true });
+        toast('Donor suspended', 'error');
+        await refreshAdminData();
+      } catch (e) {
+        toast(e.message || 'Suspend failed', 'error');
+      }
+    }
+
+    function renderShortage(donors) {
+      const grid = document.querySelector('.shortage-grid');
+      if (!grid) return;
+      const groups = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
+      const counts = {};
+      groups.forEach(g => counts[g] = 0);
+      donors.filter(d => d.status === 'available').forEach(d => { if (counts[d.blood_group] != null) counts[d.blood_group]++; });
+      grid.innerHTML = groups.map(g => {
+        const n = counts[g] || 0;
+        const cls = n <= 1 ? 'critical' : (n <= 3 ? 'low' : 'ok');
+        const pct = Math.min(100, n * 12);
+        return `<div class="shortage-card"><div class="shortage-blood">${g.replace('-', '−')}</div><div class="shortage-bar-wrap"><div class="shortage-bar ${cls}" style="width:${pct}%"></div></div><div class="shortage-count">${n} donor(s) available</div></div>`;
+      }).join('');
+    }
+
+    async function refreshAdminData() {
+      try {
+        const ov = await Auth.apiFetch('/admin/overview', { method: 'GET', withAuth: true });
+        // keep UI unchanged: update stat card values in-place if ids exist (optional)
+        const cityReqs = await Auth.apiFetch('/requests/city', { method: 'GET', withAuth: true });
+        const donors = await Auth.apiFetch('/admin/donors', { method: 'GET', withAuth: true });
+        donorsCache = donors || [];
+        renderDonors(donorsCache);
+        renderShortage(donorsCache);
+
+        const reqCard = document.querySelector('#section-requests .card');
+        if (reqCard) reqCard.innerHTML = (cityReqs || []).slice(0, 20).map(renderCityReqRow).join('') || '<div class="nearby-empty">No live requests.</div>';
+
+        // overview: update top stat numbers (best-effort)
+        const statVals = document.querySelectorAll('.stat-card .stat-card-val');
+        if (statVals && statVals.length >= 4) {
+          statVals[0].textContent = String(ov.total_donors);
+          statVals[1].textContent = String(ov.available_now);
+          statVals[2].textContent = String(ov.active_requests);
+          statVals[3].textContent = String(ov.fulfilled_today);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshAdminData();
+      setInterval(refreshAdminData, 15000);
+    });
   </script>
   <script src="../JS/shared-theme.js"></script>
 </body>
