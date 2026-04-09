@@ -1,8 +1,10 @@
 import hashlib
 import hmac
+import json
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
+from urllib import error, request
 
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -36,6 +38,38 @@ def issue_otp_challenge(db: Session, settings: Settings, phone: str) -> str:
     db.add(row)
     db.commit()
     return code
+
+
+def send_otp_via_msg91(settings: Settings, phone: str, code: str) -> None:
+    if not settings.msg91_auth_key or not settings.msg91_template_id:
+        raise ValueError("MSG91 credentials are missing. Set msg91_auth_key and msg91_template_id.")
+
+    payload = {
+        "template_id": settings.msg91_template_id,
+        "mobile": f"91{phone}",
+        "otp": code,
+    }
+    if settings.msg91_sender_id:
+        payload["sender"] = settings.msg91_sender_id
+
+    req = request.Request(
+        url="https://control.msg91.com/api/v5/otp",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "authkey": settings.msg91_auth_key,
+        },
+        method="POST",
+    )
+    try:
+        with request.urlopen(req, timeout=15) as resp:
+            if resp.status >= 400:
+                raise RuntimeError(f"MSG91 error status: {resp.status}")
+    except error.HTTPError as exc:
+        msg = exc.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(f"MSG91 HTTPError {exc.code}: {msg}") from exc
+    except error.URLError as exc:
+        raise RuntimeError(f"MSG91 network error: {exc.reason}") from exc
 
 
 def verify_otp(db: Session, settings: Settings, phone: str, code: str) -> bool:

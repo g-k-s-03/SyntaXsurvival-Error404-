@@ -10,6 +10,7 @@ from app.security import (
     get_or_create_user,
     issue_otp_challenge,
     normalize_phone,
+    send_otp_via_msg91,
     verify_otp,
 )
 
@@ -23,6 +24,21 @@ def send_otp(body: OtpSendRequest, db: Session = Depends(get_db)) -> OtpSendResp
     if len(phone) != 10:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone must be 10 digits (India)")
     code = issue_otp_challenge(db, settings, phone)
+    if not settings.demo_mode:
+        provider = settings.otp_provider.strip().lower()
+        if provider == "msg91":
+            try:
+                send_otp_via_msg91(settings, phone, code)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Failed to send OTP via MSG91: {exc}",
+                ) from exc
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported OTP provider '{settings.otp_provider}'. Use 'msg91' or demo mode.",
+            )
     return OtpSendResponse(
         demo_otp=code if settings.demo_mode else None,
     )

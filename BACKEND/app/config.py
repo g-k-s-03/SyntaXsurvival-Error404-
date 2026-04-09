@@ -15,6 +15,10 @@ class Settings(BaseSettings):
 
     demo_mode: bool = True
     demo_otp_code: str = "123456"
+    otp_provider: str = "demo"
+    msg91_auth_key: str = ""
+    msg91_template_id: str = ""
+    msg91_sender_id: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:
