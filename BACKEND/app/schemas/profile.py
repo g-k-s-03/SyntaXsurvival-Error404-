@@ -17,6 +17,7 @@ class DonorProfileCreate(BaseModel):
     aadhaar_last4: str = Field(..., min_length=4, max_length=4)
     emergency_phone: str = Field(..., max_length=15)
     consent_share: bool = False
+    is_available: bool = True
 
     @field_validator("blood_group")
     @classmethod

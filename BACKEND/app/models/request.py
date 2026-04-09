@@ -13,6 +13,7 @@ from app.database import Base
 
 if TYPE_CHECKING:
     from app.models.request_alert import RequestAlert
+    from app.models.request_match import RequestMatch
 
 
 class RequestStatus(str, enum.Enum):
@@ -81,6 +82,12 @@ class BloodRequest(Base):
 
     alerts: Mapped[list["RequestAlert"]] = relationship(
         "RequestAlert",
+        back_populates="request",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    matches: Mapped[list["RequestMatch"]] = relationship(
+        "RequestMatch",
         back_populates="request",
         cascade="all, delete-orphan",
         passive_deletes=True,

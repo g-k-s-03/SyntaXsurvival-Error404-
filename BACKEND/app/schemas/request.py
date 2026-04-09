@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.request import RequestStatus, RequestUrgency
 from app.models.request_alert import AlertStatus
+from app.models.request_match import MatchStatus
 
 VALID_BLOOD_GROUPS = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"}
 
@@ -40,6 +41,18 @@ class AlertPublic(BaseModel):
     responded_at: datetime | None = None
 
 
+class MatchPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    donor_user_id: uuid.UUID
+    rank: int
+    compatibility_score: float
+    distance_km: float | None = None
+    final_score: float
+    status: MatchStatus
+
+
 class RequestPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -59,3 +72,9 @@ class RequestPublic(BaseModel):
     fulfilled_at: datetime | None = None
     cancelled_at: datetime | None = None
     alerts: list[AlertPublic] = []
+    matches: list[MatchPublic] = []
+
+
+class RequestCreateResponse(BaseModel):
+    request: RequestPublic
+    first_wave: list[MatchPublic]
