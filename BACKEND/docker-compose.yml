@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bloodconnect
+      POSTGRES_PASSWORD: bloodconnect
+      POSTGRES_DB: bloodconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - bc_pg_data:/var/lib/postgresql/data
+
+volumes:
+  bc_pg_data:
