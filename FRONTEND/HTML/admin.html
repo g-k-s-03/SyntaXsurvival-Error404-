@@ -81,6 +81,7 @@
     <div class="nav-inner">
       <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Bond</em></span></a>
       <div class="nav-right">
+        <button type="button" class="theme-toggle" aria-label="Toggle theme">Light mode</button>
         <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--red-bright);border:1px solid var(--border-red);padding:4px 10px;border-radius:4px;">ADMIN</span>
         <button class="btn-nav-outline" onclick="window.location.href='login.html'">Logout</button>
       </div>
@@ -330,5 +331,6 @@
     }, { threshold: 0.1 });
     document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
   </script>
+  <script src="../JS/shared-theme.js"></script>
 </body>
 </html>
