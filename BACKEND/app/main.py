@@ -6,7 +6,7 @@ from sqlalchemy.exc import OperationalError
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import admin, auth, directory, health, me, profiles, requests
+from app.routers import admin, auth, directory, emergency, health, me, profiles, requests
 
 settings = get_settings()
 
@@ -40,4 +40,5 @@ app.include_router(me.router, prefix="/v1")
 app.include_router(profiles.router, prefix="/v1")
 app.include_router(directory.router, prefix="/v1")
 app.include_router(requests.router, prefix="/v1")
+app.include_router(emergency.router, prefix="/v1")
 app.include_router(admin.router, prefix="/v1")

@@ -169,6 +169,10 @@
       <button type="button" class="btn btn-primary btn-full" onclick="submitRequest()" style="margin-top:0.5rem;">
         🚀 Submit request — alert matched donors
       </button>
+      <button type="button" class="btn btn-full" onclick="triggerEmergency()" style="margin-top:0.65rem;background:rgba(200,16,46,0.12);border:1px solid var(--red-bright);color:var(--red-bright);font-weight:600;">
+        🚨 Emergency Blood Request
+      </button>
+      <p id="emergencyStatus" style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem;min-height:1.25em;" aria-live="polite"></p>
     </div>
   </div>
 
@@ -374,6 +378,7 @@
     
 
     let reqUnits = 1; let selUrgencyVal = ''; let selBloodVal = '';
+    let lastCreatedRequestId = null;
 
     function openModal() { document.getElementById('reqModal').classList.add('open'); }
     function closeModal() { document.getElementById('reqModal').classList.remove('open'); }
@@ -410,12 +415,101 @@
       document.getElementById('unitsVal').textContent = reqUnits;
     }
 
-    function submitRequest() {
+    async function submitRequest() {
       if (!selBloodVal) { toast('Select a blood group', 'error'); return; }
       if (!selUrgencyVal) { toast('Select urgency level', 'error'); return; }
-      closeModal();
-      toast('🚀 Request submitted! Top 3 donors alerted via SMS');
-      document.getElementById('activeCount').textContent = '3';
+      const loc = document.getElementById('reqLoc').value.trim();
+      if (loc.length < 2) { toast('Enter a location (at least 2 characters)', 'error'); return; }
+      const bg = Auth.normalizeBloodGroup(selBloodVal);
+      if (!bg) { toast('Invalid blood group selection', 'error'); return; }
+      try {
+        const data = await Auth.apiFetch('/requests', {
+          method: 'POST',
+          body: {
+            blood_group: bg,
+            units: reqUnits,
+            urgency: selUrgencyVal,
+            location_text: loc
+          }
+        });
+        lastCreatedRequestId = data.request && data.request.id ? data.request.id : null;
+        closeModal();
+        toast('Request submitted. Matched donors are being alerted.');
+        var n = parseInt(document.getElementById('activeCount').textContent, 10);
+        if (!isNaN(n)) document.getElementById('activeCount').textContent = String(n + 1);
+      } catch (e) {
+        toast(String(e.message || e), 'error');
+      }
+    }
+
+    async function triggerEmergency() {
+      var statusEl = document.getElementById('emergencyStatus');
+      if (!selBloodVal) { toast('Select a blood group', 'error'); return; }
+      if (!selUrgencyVal) { toast('Select urgency level', 'error'); return; }
+      var loc = document.getElementById('reqLoc').value.trim();
+      if (loc.length < 2) { toast('Enter a location (at least 2 characters)', 'error'); return; }
+      var bg = Auth.normalizeBloodGroup(selBloodVal);
+      if (!bg) { toast('Invalid blood group selection', 'error'); return; }
+      if (statusEl) statusEl.textContent = 'Creating request…';
+      try {
+        var createRes = await Auth.apiFetch('/requests', {
+          method: 'POST',
+          body: {
+            blood_group: bg,
+            units: reqUnits,
+            urgency: selUrgencyVal,
+            location_text: loc
+          }
+        });
+        var requestId = createRes.request && createRes.request.id;
+        if (!requestId) throw new Error('No request id returned');
+        lastCreatedRequestId = requestId;
+        if (!navigator.geolocation) {
+          toast('Geolocation is not available in this browser.', 'error');
+          if (statusEl) statusEl.textContent = '';
+          return;
+        }
+        if (statusEl) statusEl.textContent = 'Getting your location…';
+        await new Promise(function (resolve, reject) {
+          navigator.geolocation.getCurrentPosition(
+            async function (pos) {
+              try {
+                await Auth.apiFetch('/emergency/trigger', {
+                  method: 'POST',
+                  body: {
+                    request_id: requestId,
+                    is_emergency: true,
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude,
+                    blood_group: bg
+                  }
+                });
+                if (statusEl) {
+                  statusEl.textContent = 'Emergency escalation running: 5 → 10 → 20 → 40 → 50 km (3 min between steps).';
+                }
+                toast('Emergency escalation started.', 'success');
+                closeModal();
+                var ac = parseInt(document.getElementById('activeCount').textContent, 10);
+                if (!isNaN(ac)) document.getElementById('activeCount').textContent = String(ac + 1);
+                resolve();
+              } catch (err) {
+                toast(String(err.message || err), 'error');
+                if (statusEl) statusEl.textContent = '';
+                reject(err);
+              }
+            },
+            function () {
+              toast('Location denied or unavailable. Enable location to start emergency escalation.', 'error');
+              if (statusEl) statusEl.textContent = '';
+              reject(new Error('geolocation'));
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+          );
+        });
+      } catch (e) {
+        if (statusEl) statusEl.textContent = '';
+        if (e && e.message !== 'geolocation') toast(String(e.message || e), 'error');
+      }
     }
 
     function cancelReq(btn) {
