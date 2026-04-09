@@ -91,6 +91,12 @@
       font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
       letter-spacing: 0.06em; opacity: 0.5;
     }
+    .index-theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
@@ -111,6 +117,7 @@
   <div class="bg-grid"></div>
   <div class="orb-1"></div>
   <div class="orb-2"></div>
+  <button type="button" class="theme-toggle index-theme-toggle" aria-label="Toggle theme">Light mode</button>
 
   <div class="splash-wrap">
     <div class="splash-logo">🩸</div>
