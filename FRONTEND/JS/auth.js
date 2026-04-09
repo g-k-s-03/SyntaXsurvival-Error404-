@@ -7,7 +7,8 @@
   var API_BASE_KEY = 'bc_api_base';
   var OFFLINE_MODE_KEY = 'bc_offline_mode';
   var OFFLINE_OTP_KEY = 'bc_offline_otp';
-  var DEFAULT_API_BASE = 'http://localhost:8000/v1';
+  // Production default (Render). Can be overridden via ?api_base=...
+  var DEFAULT_API_BASE = 'https://syntaxsurvival-error404.onrender.com/v1';
 
   function applyApiBaseFromUrl() {
     try {
@@ -22,8 +23,24 @@
 
   applyApiBaseFromUrl();
 
+  function isLocalhostHost(hostname) {
+    var h = String(hostname || '').toLowerCase();
+    return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+  }
+
+  function isLocalApiBase(apiBase) {
+    var s = String(apiBase || '').toLowerCase();
+    return s.indexOf('http://localhost') === 0 || s.indexOf('http://127.0.0.1') === 0;
+  }
+
   function getApiBase() {
-    return (localStorage.getItem(API_BASE_KEY) || DEFAULT_API_BASE).replace(/\/+$/, '');
+    var stored = localStorage.getItem(API_BASE_KEY) || '';
+    // If we're on a deployed site and a stale localhost api_base is stored,
+    // ignore it to avoid browser LAN-access prompts for shared links.
+    if (stored && isLocalApiBase(stored) && !isLocalhostHost(window.location.hostname)) {
+      stored = '';
+    }
+    return (stored || DEFAULT_API_BASE).replace(/\/+$/, '');
   }
 
   function normalizePhone(raw) {
@@ -118,8 +135,9 @@
     return data;
   }
 
-  async function post(path, payload, withAuth) {
-    return apiFetch(path, { method: 'POST', body: payload || {}, withAuth: withAuth });
+  async function post(path, payload, withAuth, options) {
+    options = options || {};
+    return apiFetch(path, { method: 'POST', body: payload || {}, withAuth: withAuth, timeoutMs: options.timeoutMs });
   }
 
   function createOfflineOtpChallenge(phone) {
@@ -163,8 +181,9 @@
     return offlineUser;
   }
 
-  async function fetchMe() {
-    var data = await apiFetch('/me', { method: 'GET', withAuth: true });
+  async function fetchMe(options) {
+    options = options || {};
+    var data = await apiFetch('/me', { method: 'GET', withAuth: true, timeoutMs: options.timeoutMs });
     if (data && data.user && data.user.role) {
       localStorage.setItem(ROLE_KEY, String(data.user.role));
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
@@ -186,7 +205,14 @@
         return false;
       }
       return true;
-    } catch (_) {
+    } catch (err) {
+      // On slow/unstable networks, don't hard-logout. Fall back to cached role.
+      if (err && err.code === 'NETWORK') {
+        var cachedRole = getRole();
+        if (cachedRole === requiredRole) return true;
+        if (cachedRole) window.location.href = roleHome(cachedRole);
+        return false;
+      }
       clearSession();
       window.location.href = 'login.html';
       return false;

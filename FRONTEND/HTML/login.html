@@ -314,7 +314,8 @@
       btn.disabled = true;
 
       try {
-        const data = await Auth.post('/auth/otp/send', { phone: phone }, false);
+        // Use a longer timeout to avoid false "offline OTP" on slow internet.
+        const data = await Auth.post('/auth/otp/send', { phone: phone }, false, { timeoutMs: 25000 });
         currentPhone = phone;
         document.getElementById('phoneInput').value = phone;
         document.getElementById('phoneStep').style.display = 'none';
@@ -369,7 +370,7 @@
           changeNumber();
           return;
         }
-        const data = await Auth.post('/auth/otp/send', { phone: phone }, false);
+        const data = await Auth.post('/auth/otp/send', { phone: phone }, false, { timeoutMs: 25000 });
         toast('OTP resent!');
         if (data && data.demo_otp) {
           toast('Demo OTP: ' + data.demo_otp);
@@ -422,10 +423,11 @@
           phone: phone,
           code: digits,
           role: roleToVerify
-        }, false);
+        }, false, { timeoutMs: 25000 });
         Auth.saveSession(data.access_token, data.user);
         await Auth.syncPendingProfile();
-        await Auth.fetchMe();
+        // Don't bounce the user on slow internet after a successful verify.
+        try { await Auth.fetchMe({ timeoutMs: 25000 }); } catch (_) {}
         clearInterval(timerInterval);
         document.getElementById('verifiedCheck').classList.add('show');
         toast('Phone verified! ✓');
