@@ -2,7 +2,8 @@ __pycache__/
 *.py[cod]
 *.pyd
 
-C:\Users\gs626\hakathon\SyntaXsurvival-Error404-\BACKEND\.env
+# Project env files
+BACKEND/.env
 .env
 .venv/
 venv/
@@ -13,3 +14,10 @@ env/
 .ruff_cache/
 
 .DS_Store
+
+# Local databases (runtime state)
+BACKEND/*.db
+
+# Never commit bytecode caches
+**/__pycache__/
+**/*.pyc

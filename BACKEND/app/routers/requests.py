@@ -4,11 +4,8 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session, selectinload
 
-<<<<<<< HEAD
 from app.config import get_settings
-=======
 from app.audit import write_audit_log
->>>>>>> 2a744819232b09d243f32d2c1990f53b21113969
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.donor_profile import DonorProfile
