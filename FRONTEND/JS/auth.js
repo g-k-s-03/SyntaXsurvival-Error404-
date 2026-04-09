@@ -9,6 +9,19 @@
   var OFFLINE_OTP_KEY = 'bc_offline_otp';
   var DEFAULT_API_BASE = 'http://localhost:8000/v1';
 
+  function applyApiBaseFromUrl() {
+    try {
+      var params = new URLSearchParams(window.location.search || '');
+      var apiBase = params.get('api_base');
+      if (!apiBase) return;
+      apiBase = String(apiBase).trim().replace(/\/+$/, '');
+      if (!/^https?:\/\//i.test(apiBase)) return;
+      localStorage.setItem(API_BASE_KEY, apiBase);
+    } catch (_) {}
+  }
+
+  applyApiBaseFromUrl();
+
   function getApiBase() {
     return (localStorage.getItem(API_BASE_KEY) || DEFAULT_API_BASE).replace(/\/+$/, '');
   }
