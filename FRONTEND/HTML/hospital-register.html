@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hospital Registration — BloodConnect</title>
+  <title>Hospital / Blood Bank Registration — BloodConnect</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
@@ -51,15 +51,15 @@
     <div class="reg-wrap">
 
       <div class="reg-header" data-reveal>
-        <p class="section-label">— Hospital Registration</p>
-        <h1 class="reg-title">Register your<br /><em>hospital</em></h1>
-        <p style="font-size:0.85rem;color:var(--text-muted);">Verified hospitals can request blood and track donors in real time.</p>
+        <p class="section-label">— Hospital / Blood Bank Registration</p>
+        <h1 class="reg-title">Register your<br /><em>hospital / blood bank</em></h1>
+        <p style="font-size:0.85rem;color:var(--text-muted);">Verified hospitals and blood banks can request blood and track donors in real time.</p>
       </div>
 
       <div class="form-section" data-reveal data-reveal-delay="1">
-        <div class="form-section-title"><span>🏥</span> Hospital Details</div>
+        <div class="form-section-title"><span>🏥</span> Facility Details</div>
         <div class="form-group">
-          <label class="form-label">Hospital Name <span class="req">*</span></label>
+          <label class="form-label">Hospital / Blood Bank Name <span class="req">*</span></label>
           <input type="text" class="form-control" id="hname" placeholder="Kamla Raja Government Hospital" />
         </div>
         <div class="form-grid">
@@ -76,10 +76,11 @@
             <input type="tel" class="form-control" id="hphone" placeholder="07512 234567" />
           </div>
           <div class="form-group">
-            <label class="form-label">Hospital Type</label>
+            <label class="form-label">Facility Type</label>
             <select class="form-control" id="htype">
               <option>Government Hospital</option>
               <option>Private Hospital</option>
+              <option>Blood Bank</option>
               <option>Nursing Home</option>
               <option>Clinic</option>
             </select>
@@ -113,12 +114,12 @@
 
         <div class="consent-box">
           <input type="checkbox" id="hconsent" />
-          <label for="hconsent">I confirm this hospital is a registered medical institution and agree that misuse of this platform for invalid blood requests will result in account suspension.</label>
+          <label for="hconsent">I confirm this hospital or blood bank is a registered medical institution and agree that misuse of this platform for invalid blood requests will result in account suspension.</label>
         </div>
       </div>
 
       <button class="btn btn-primary btn-full btn-lg" onclick="submitHospital()" data-reveal data-reveal-delay="3">
-        Register Hospital →
+        Register Hospital / Blood Bank →
       </button>
     </div>
   </div>
@@ -140,7 +141,7 @@
     function submitHospital() {
       const name = document.getElementById('hname').value.trim();
       const phone = document.getElementById('hphone').value.trim();
-      if (!name) { toast('Enter hospital name', 'error'); return; }
+      if (!name) { toast('Enter hospital / blood bank name', 'error'); return; }
       if (!phone) { toast('Enter contact phone', 'error'); return; }
       if (!document.getElementById('hconsent').checked) { toast('Please confirm consent', 'error'); return; }
 
@@ -150,7 +151,7 @@
         localStorage.setItem('bc_role', 'hospital');
         localStorage.setItem('bc_hosp_name', name);
         localStorage.setItem('bc_pending_phone', phone.replace(/\D/g, '').slice(-10));
-        toast('Hospital registered. Verify your phone to continue.');
+        toast('Hospital / blood bank registered. Verify your phone to continue.');
         setTimeout(() => { window.location.href = 'login.html?mode=verify&role=hospital'; }, 1000);
       }, 1800);
     }
