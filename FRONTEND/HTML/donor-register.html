@@ -284,6 +284,7 @@
 
   <div class="toast-container" id="toasts"></div>
 
+  <script src="../JS/auth.js"></script>
   <script>
     
     let currentStep = 1;
@@ -310,7 +311,7 @@
       if (s === 1) {
         const name = document.getElementById('fname').value.trim();
         const age  = parseInt(document.getElementById('fage').value);
-        const phone = (document.getElementById('fphone').value || '').replace(/\D/g, '');
+        const phone = Auth.normalizePhone(document.getElementById('fphone').value);
         const wt   = parseInt(document.getElementById('fweight').value);
         const loc  = document.getElementById('floc').value.trim();
         if (!name) { toast('Enter your full name', 'error'); return false; }
@@ -349,8 +350,8 @@
 
     
     function selectBlood(bg) {
-      selectedBlood = bg;
-      document.getElementById('fblood').value = bg;
+      selectedBlood = Auth.normalizeBloodGroup(bg);
+      document.getElementById('fblood').value = selectedBlood;
       document.querySelectorAll('.blood-opt').forEach(o => o.classList.remove('selected'));
       [...document.querySelectorAll('.blood-opt')].find(o => o.textContent.replace('−', '-') === bg || o.textContent === bg)?.classList.add('selected');
     }
@@ -386,17 +387,24 @@
     function submitRegistration() {
       if (!validateStep(3)) return;
       const btn = document.getElementById('regBtnText');
-      btn.textContent = '⏳ Creating...';
-      // Simulate Firebase save
-      setTimeout(() => {
-        localStorage.setItem('bc_role', 'donor');
-        localStorage.setItem('bc_pending_role', 'donor');
-        localStorage.setItem('bc_donor_blood', selectedBlood || 'O+');
-        localStorage.setItem('bc_donor_name', document.getElementById('fname').value || 'Rahul Sharma');
-        localStorage.setItem('bc_pending_phone', (document.getElementById('fphone').value || '').replace(/\D/g, '').slice(-10));
-        toast('Account created. Verify your phone to continue.');
-        setTimeout(() => { window.location.href = 'login.html?mode=verify&role=donor'; }, 1000);
-      }, 1800);
+      btn.textContent = '⏳ Preparing...';
+      const payload = {
+        full_name: document.getElementById('fname').value.trim(),
+        age: parseInt(document.getElementById('fage').value, 10),
+        weight_kg: parseInt(document.getElementById('fweight').value, 10),
+        area_text: document.getElementById('floc').value.trim(),
+        blood_group: Auth.normalizeBloodGroup(selectedBlood),
+        last_donation_date: document.getElementById('flastdon').value || null,
+        medical_notes: (document.getElementById('fmedical').value || '').trim() || null,
+        aadhaar_last4: (document.getElementById('faad').value || '').trim(),
+        emergency_phone: Auth.normalizePhone(document.getElementById('femerg').value),
+        consent_share: !!document.getElementById('fconsent').checked
+      };
+      sessionStorage.setItem('bc_pending_role', 'donor');
+      sessionStorage.setItem('bc_pending_phone', Auth.normalizePhone(document.getElementById('fphone').value));
+      sessionStorage.setItem('bc_pending_profile', JSON.stringify({ type: 'donor', payload: payload }));
+      toast('Profile queued. Verify your phone to activate donor account.');
+      setTimeout(() => { window.location.href = 'login.html?mode=verify&role=donor'; }, 700);
     }
 
     function toast(msg, type = 'success') {

@@ -126,36 +126,8 @@
 
   <div class="toast-container" id="toasts"></div>
 
+  <script src="../JS/auth.js"></script>
   <script>
-    function normalizeName(value) {
-      return value.toLowerCase().replace(/\s+/g, ' ').trim();
-    }
-
-    function normalizePhone(value) {
-      return value.replace(/\D/g, '').slice(-10);
-    }
-
-    function getHospitals() {
-      try {
-        const saved = JSON.parse(localStorage.getItem('bc_hospitals') || '[]');
-        return Array.isArray(saved) ? saved : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function setHospitals(list) {
-      localStorage.setItem('bc_hospitals', JSON.stringify(list));
-    }
-
-    function alreadyRegisteredHospital(name, phone) {
-      const normalizedName = normalizeName(name);
-      const normalizedPhone = normalizePhone(phone);
-      return getHospitals().find(h =>
-        normalizeName(h.name || '') === normalizedName ||
-        normalizePhone(h.phone || '') === normalizedPhone
-      );
-    }
 
     
     function autoLocate() {
@@ -170,38 +142,36 @@
 
     function submitHospital() {
       const name = document.getElementById('hname').value.trim();
-      const phone = document.getElementById('hphone').value.trim();
-      const pendingPhone = normalizePhone(phone);
+      const phone = Auth.normalizePhone(document.getElementById('hphone').value);
+      const contact = document.getElementById('hcontact').value.trim();
+      const address = document.getElementById('haddr').value.trim();
+      const city = document.getElementById('hcity').value.trim();
       if (!name) { toast('Enter hospital / blood bank name', 'error'); return; }
-      if (!phone) { toast('Enter contact phone', 'error'); return; }
-      if (pendingPhone.length !== 10) { toast('Enter a valid 10-digit phone', 'error'); return; }
+      if (!contact) { toast('Enter hospital executive name', 'error'); return; }
+      if (!/^\d{10}$/.test(phone)) { toast('Enter a valid 10-digit phone', 'error'); return; }
+      if (!address) { toast('Enter address', 'error'); return; }
+      if (!city) { toast('Enter city', 'error'); return; }
       if (!document.getElementById('hconsent').checked) { toast('Please confirm consent', 'error'); return; }
-      if (alreadyRegisteredHospital(name, phone)) {
-        toast('Hospital already registered. Please login/verify instead.', 'error');
-        return;
-      }
 
       const btn = document.querySelector('.btn-primary');
-      btn.textContent = '⏳ Registering...'; btn.disabled = true;
-      setTimeout(() => {
-        const hospitals = getHospitals();
-        const hospitalRecord = {
-          id: Date.now(),
-          name,
-          phone: pendingPhone,
-          verified: false
-        };
-        hospitals.push(hospitalRecord);
-        setHospitals(hospitals);
-
-        localStorage.setItem('bc_role', 'hospital');
-        localStorage.setItem('bc_pending_role', 'hospital');
-        localStorage.setItem('bc_hosp_name', name);
-        localStorage.setItem('bc_pending_phone', pendingPhone);
-        localStorage.setItem('bc_pending_hospital_id', String(hospitalRecord.id));
-        toast('Hospital / blood bank registered. Complete verification to activate account.');
-        setTimeout(() => { window.location.href = 'login.html?mode=verify&role=hospital'; }, 1000);
-      }, 1800);
+      btn.textContent = '⏳ Preparing...';
+      btn.disabled = true;
+      const payload = {
+        facility_name: name,
+        contact_person: contact,
+        designation: (document.getElementById('hdesg').value || '').trim() || null,
+        facility_type: (document.getElementById('htype').value || '').trim() || null,
+        address: address,
+        city: city,
+        area: (document.getElementById('harea').value || '').trim() || null,
+        gps_text: (document.getElementById('hgps').value || '').trim() || null,
+        consent: !!document.getElementById('hconsent').checked
+      };
+      sessionStorage.setItem('bc_pending_role', 'hospital');
+      sessionStorage.setItem('bc_pending_phone', phone);
+      sessionStorage.setItem('bc_pending_profile', JSON.stringify({ type: 'hospital', payload: payload }));
+      toast('Profile queued. Verify phone to activate hospital account.');
+      setTimeout(() => { window.location.href = 'login.html?mode=verify&role=hospital'; }, 700);
     }
 
     function toast(msg, type = 'success') {

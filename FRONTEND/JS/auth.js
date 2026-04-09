@@ -11,6 +11,16 @@
     return (localStorage.getItem(API_BASE_KEY) || DEFAULT_API_BASE).replace(/\/+$/, '');
   }
 
+  function normalizePhone(raw) {
+    return String(raw || '').replace(/\D/g, '').slice(-10);
+  }
+
+  function normalizeBloodGroup(raw) {
+    var v = String(raw || '').toUpperCase().replace(/\s+/g, '').replace('−', '-');
+    var allowed = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+    return allowed.indexOf(v) >= 0 ? v : '';
+  }
+
   function getToken() {
     return localStorage.getItem(TOKEN_KEY) || '';
   }
@@ -43,24 +53,25 @@
   }
 
   function requireRole(requiredRole) {
-    var token = getToken();
     var role = getRole();
-    if (!token || !role) {
-      window.location.href = 'login.html';
-      return false;
-    }
-    if (role !== requiredRole) {
-      window.location.href = roleHome(role);
+    var token = getToken();
+    if (!token || role !== requiredRole) {
+      window.location.href = token ? roleHome(role) : 'login.html';
       return false;
     }
     return true;
   }
 
-  async function post(path, payload) {
+  async function apiFetch(path, options) {
+    options = options || {};
+    var method = options.method || 'GET';
+    var withAuth = options.withAuth !== false;
+    var headers = { 'Content-Type': 'application/json' };
+    if (withAuth && getToken()) headers.Authorization = 'Bearer ' + getToken();
     var res = await fetch(getApiBase() + path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload || {})
+      method: method,
+      headers: headers,
+      body: options.body ? JSON.stringify(options.body) : undefined
     });
     var data = {};
     try {
@@ -73,6 +84,60 @@
     return data;
   }
 
+  async function post(path, payload, withAuth) {
+    return apiFetch(path, { method: 'POST', body: payload || {}, withAuth: withAuth });
+  }
+
+  async function fetchMe() {
+    var data = await apiFetch('/me', { method: 'GET', withAuth: true });
+    if (data && data.user && data.user.role) {
+      localStorage.setItem(ROLE_KEY, String(data.user.role));
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    }
+    return data;
+  }
+
+  async function enforceRole(requiredRole) {
+    var token = getToken();
+    if (!token) {
+      window.location.href = 'login.html';
+      return false;
+    }
+    try {
+      var me = await fetchMe();
+      var role = me && me.user ? me.user.role : '';
+      if (role !== requiredRole) {
+        window.location.href = roleHome(role);
+        return false;
+      }
+      return true;
+    } catch (_) {
+      clearSession();
+      window.location.href = 'login.html';
+      return false;
+    }
+  }
+
+  async function syncPendingProfile() {
+    var raw = sessionStorage.getItem('bc_pending_profile');
+    if (!raw) return { synced: false };
+    var pending;
+    try {
+      pending = JSON.parse(raw);
+    } catch (_) {
+      sessionStorage.removeItem('bc_pending_profile');
+      return { synced: false };
+    }
+    if (!pending || !pending.type || !pending.payload) {
+      sessionStorage.removeItem('bc_pending_profile');
+      return { synced: false };
+    }
+    var path = pending.type === 'donor' ? '/profiles/donor' : '/profiles/hospital';
+    await post(path, pending.payload, true);
+    sessionStorage.removeItem('bc_pending_profile');
+    return { synced: true };
+  }
+
   global.Auth = {
     getApiBase: getApiBase,
     getToken: getToken,
@@ -80,8 +145,14 @@
     isAuthenticated: isAuthenticated,
     saveSession: saveSession,
     clearSession: clearSession,
+    normalizePhone: normalizePhone,
+    normalizeBloodGroup: normalizeBloodGroup,
     roleHome: roleHome,
     requireRole: requireRole,
+    apiFetch: apiFetch,
+    fetchMe: fetchMe,
+    enforceRole: enforceRole,
+    syncPendingProfile: syncPendingProfile,
     post: post
   };
 })(window);
