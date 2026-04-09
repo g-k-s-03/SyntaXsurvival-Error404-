@@ -35,8 +35,8 @@
   --border:      rgba(10, 20, 35, 0.12);
   --border-red:  rgba(200,16,46,0.24);
   --text:        #111827;
-  --text-muted:  #6b7280;
-  --text-dim:    #4b5563;
+  --text-muted:  #374151;
+  --text-dim:    #1f2937;
 }
 
 html { font-size: 16px; scroll-behavior: smooth; }

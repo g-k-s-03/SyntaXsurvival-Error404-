@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -25,6 +25,7 @@ class DonorAvailabilityUpdate(BaseModel):
 @router.post("/profile/donor", status_code=status.HTTP_200_OK)
 def upsert_donor_profile(
     body: DonorProfileCreate,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
@@ -63,12 +64,22 @@ def upsert_donor_profile(
         for k, v in data.items():
             setattr(row, k, v)
     db.commit()
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="profile.donor.upsert",
+        target_type="user",
+        target_id=str(user.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return {"status": "saved"}
 
 
 @router.post("/donor/availability", status_code=status.HTTP_200_OK)
 def update_availability(
     body: DonorAvailabilityUpdate,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
@@ -95,6 +106,8 @@ def update_availability(
         action="donor.availability.update",
         target_type="user",
         target_id=str(user.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
         meta={"is_available": row.is_available},
     )
     return {"status": "updated"}
@@ -104,6 +117,7 @@ def update_availability(
 @router.post("/profile/hospital", status_code=status.HTTP_200_OK)
 def upsert_hospital_profile(
     body: HospitalProfileCreate,
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
@@ -140,4 +154,13 @@ def upsert_hospital_profile(
         for k, v in data.items():
             setattr(row, k, v)
     db.commit()
+    write_audit_log(
+        db,
+        actor_user_id=user.id,
+        action="profile.hospital.upsert",
+        target_type="user",
+        target_id=str(user.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return {"status": "saved"}

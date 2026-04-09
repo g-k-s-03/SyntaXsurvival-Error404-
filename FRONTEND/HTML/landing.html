@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BloodBond - Blood Donation Network</title>
+  <title>BloodBond — Real-time blood matching</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -19,7 +19,7 @@
         <span class="logo-drop">🩸</span>
         <span>Blood<em>Bond</em></span>
       </a>
-      <button type="button" class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+      <button type="button" class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
         <span></span><span></span>
       </button>
       <div class="nav-right">
@@ -30,7 +30,7 @@
     </div>
   </header>
 
-  <div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="BloodBond navigation">
     <a href="#features" class="mobile-link" onclick="closeMobile()">Features</a>
     <a href="#impact" class="mobile-link" onclick="closeMobile()">Impact</a>
     <a href="login.html" class="mobile-link" onclick="closeMobile()">Login</a>
@@ -39,7 +39,7 @@
 
   <main class="minimal-landing">
     <section class="hero-minimal">
-      <div class="hero-kicker" data-reveal>Real-time blood matching</div>
+      <div class="hero-kicker" data-reveal>BloodBond · Real-time blood matching</div>
       <h1 data-reveal data-reveal-delay="1">Find blood donors faster, with less noise.</h1>
       <p class="hero-sub" data-reveal data-reveal-delay="2">
         BloodBond connects hospitals and verified donors in minutes using simple workflows and smart matching.

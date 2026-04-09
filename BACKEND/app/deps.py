@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import get_db
 from app.models.user import User
+from app.models.user import UserRole
 from app.security import get_user_from_token
 
 _bearer = HTTPBearer(auto_error=False)
@@ -23,3 +24,15 @@ def get_current_user(
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
     return user
+
+
+def require_role(role: UserRole):
+    def _guard(user: Annotated[User, Depends(get_current_user)]) -> User:
+        if user.role != role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"{role.value.capitalize()} role required",
+            )
+        return user
+
+    return _guard

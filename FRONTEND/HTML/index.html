@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BloodBond</title>
+  <title>BloodBond — Welcome</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
@@ -130,7 +130,7 @@
       <div class="splash-bar" id="bar"></div>
     </div>
 
-    <p class="splash-sub" id="loadMsg">Initialising...</p>
+    <p class="splash-sub" id="loadMsg" aria-live="polite" aria-busy="true">Starting BloodBond…</p>
   </div>
 
   <p class="hackathon-badge">PS-17 · SyntaXsurvival · TechRhythm 2.0 · ITM Gwalior · April 2026</p>
@@ -139,7 +139,7 @@
     
     const bar = document.getElementById('bar');
     const msg = document.getElementById('loadMsg');
-    const msgs = ['Initialising...', 'Connecting to Firebase...', 'Loading donor database...', 'Ready!'];
+    const msgs = ['Starting BloodBond…', 'Loading BloodBond…', 'Preparing your session…', 'Ready — opening sign in'];
     let pct = 0;
     const interval = setInterval(() => {
       pct += 2;

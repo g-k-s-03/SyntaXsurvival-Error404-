@@ -50,6 +50,13 @@
       cursor: pointer; transition: all 0.25s var(--ease-expo);
       text-align: left; position: relative; overflow: hidden;
       display: flex; flex-direction: column; gap: 1rem;
+      font: inherit;
+      color: inherit;
+      width: 100%;
+    }
+    button.role-card {
+      -webkit-appearance: none;
+      appearance: none;
     }
     .role-card::before {
       content: ''; position: absolute; inset: 0;
@@ -111,7 +118,7 @@
     </div>
   </header>
 
-  <div class="role-page">
+  <main class="role-page">
     <div class="role-bg"></div>
     <div class="role-orb"></div>
 
@@ -120,11 +127,12 @@
       <h1 class="role-title">I am a<br /><em>...</em></h1>
       <p class="role-sub">Select your role. This cannot be changed after registration.</p>
 
-      <div class="role-grid">
+      <div class="role-grid" role="group" aria-label="Choose how you use BloodBond">
 
-        <div class="role-card" onclick="selectRole('donor', 'donor-register.html')" id="card-donor">
+        <button type="button" class="role-card" onclick="selectRole('donor', 'donor-register.html')" id="card-donor"
+          aria-label="Register as a donor on BloodBond">
           <span class="rc-num">01</span>
-          <div class="rc-icon">🩸</div>
+          <div class="rc-icon" aria-hidden="true">🩸</div>
           <div class="rc-name">Donor</div>
           <p class="rc-desc">Register your blood group and receive SMS alerts when nearby hospitals need your blood type.</p>
           <div class="rc-features">
@@ -134,12 +142,12 @@
             <span class="rc-feat">Nearby request radar</span>
           </div>
           <span class="rc-cta">Register as Donor →</span>
-        </div>
+        </button>
 
-      
-        <div class="role-card" onclick="selectRole('hospital', 'hospital-register.html')" id="card-hospital">
+        <button type="button" class="role-card" onclick="selectRole('hospital', 'hospital-register.html')" id="card-hospital"
+          aria-label="Register a hospital or blood bank on BloodBond">
           <span class="rc-num">02</span>
-          <div class="rc-icon">🏥</div>
+          <div class="rc-icon" aria-hidden="true">🏥</div>
           <div class="rc-name">Hospital / Blood Bank</div>
           <p class="rc-desc">Submit emergency or scheduled blood requests. Track status in real time. View matched donors on map.</p>
           <div class="rc-features">
@@ -149,27 +157,27 @@
             <span class="rc-feat">Cancel & fulfillment flow</span>
           </div>
           <span class="rc-cta">Register Hospital / Blood Bank →</span>
-        </div>
+        </button>
 
-        
-        <div class="role-card" onclick="selectRole('admin', 'admin.html')" id="card-admin">
+        <button type="button" class="role-card" onclick="selectRole('admin', 'admin.html')" id="card-admin"
+          aria-label="Open BloodBond city operations dashboard">
           <span class="rc-num">03</span>
-          <div class="rc-icon">⚙️</div>
-          <div class="rc-name">General Dashboard</div>
-          <p class="rc-desc">City-wide operations dashboard visible to all. Monitor requests, view shortage stats, and broadcast alerts.</p>
+          <div class="rc-icon" aria-hidden="true">⚙️</div>
+          <div class="rc-name">City operations</div>
+          <p class="rc-desc">BloodBond city-wide view: monitor requests, shortage stats, and emergency broadcasts.</p>
           <div class="rc-features">
             <span class="rc-feat">Live city request map</span>
             <span class="rc-feat">Donor heatmap</span>
             <span class="rc-feat">Blood shortage stats</span>
             <span class="rc-feat">Emergency broadcast</span>
           </div>
-          <span class="rc-cta">Open General Dashboard →</span>
-        </div>
+          <span class="rc-cta">Open city dashboard →</span>
+        </button>
       </div>
 
       <p class="role-note"><strong>⚠ Role lock:</strong> Role cannot be changed after account creation for security.</p>
     </div>
-  </div>
+  </main>
 
   <script>
     

@@ -3,6 +3,8 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.sanitization import sanitize_optional_text, sanitize_text
+
 VALID_BLOOD_GROUPS = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"}
 
 
@@ -36,6 +38,16 @@ class DonorProfileCreate(BaseModel):
             raise ValueError("Aadhaar last4 must be exactly 4 digits")
         return value
 
+    @field_validator("full_name", "area_text", "emergency_phone")
+    @classmethod
+    def sanitize_required_texts(cls, value: str) -> str:
+        return sanitize_text(value)
+
+    @field_validator("medical_notes")
+    @classmethod
+    def sanitize_medical_notes(cls, value: str | None) -> str | None:
+        return sanitize_optional_text(value)
+
 
 class DonorPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -58,6 +70,16 @@ class HospitalProfileCreate(BaseModel):
     area: str | None = Field(None, max_length=200)
     gps_text: str | None = Field(None, max_length=200)
     consent: bool = False
+
+    @field_validator("facility_name", "contact_person", "address", "city")
+    @classmethod
+    def sanitize_required_fields(cls, value: str) -> str:
+        return sanitize_text(value)
+
+    @field_validator("designation", "facility_type", "area", "gps_text")
+    @classmethod
+    def sanitize_optional_fields(cls, value: str | None) -> str | None:
+        return sanitize_optional_text(value)
 
 
 class HospitalPublic(BaseModel):

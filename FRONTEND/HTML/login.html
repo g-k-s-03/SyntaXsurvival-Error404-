@@ -118,6 +118,12 @@
     .change-num {
       font-size: 0.78rem; color: var(--text-muted); cursor: pointer;
       transition: color 0.2s;
+      font-family: var(--font-sans);
+    }
+    button.change-num {
+      background: none;
+      border: none;
+      padding: 0;
     }
     .change-num:hover { color: var(--text); }
 
@@ -195,10 +201,14 @@
     <div class="login-right">
       <div class="login-box">
         <h2 class="login-title">Welcome back</h2>
+<<<<<<< HEAD
         <p class="login-hint">Enter your phone number to receive an OTP</p>
         <p class="login-hint" style="margin-top:-1.2rem;">
           If internet is unavailable/very slow, offline OTP fallback will be enabled on this device.
         </p>
+=======
+        <p class="login-hint">Sign in to BloodBond — enter your phone number to receive an OTP</p>
+>>>>>>> 2a744819232b09d243f32d2c1990f53b21113969
 
         
         <div id="phoneStep">
@@ -214,7 +224,7 @@
             </div>
           </div>
 
-          <button class="btn btn-primary btn-full btn-lg" id="sendOtpBtn" onclick="sendOTP()" style="margin-top:0.5rem;">
+          <button type="button" class="btn btn-primary btn-full btn-lg" id="sendOtpBtn" onclick="sendOTP()" style="margin-top:0.5rem;">
             <span class="btn-text">Send OTP →</span>
             <span class="btn-spin"><span class="spinner"></span> Sending...</span>
           </button>
@@ -242,11 +252,11 @@
           </div>
 
           <div class="resend-row">
-            <span class="change-num" onclick="changeNumber()">← Change number</span>
-            <button class="resend-btn" id="resendBtn" disabled onclick="resendOTP()">Resend OTP</button>
+            <button type="button" class="change-num" onclick="changeNumber()">← Change number</button>
+            <button type="button" class="resend-btn" id="resendBtn" disabled onclick="resendOTP()">Resend OTP</button>
           </div>
 
-          <button class="btn btn-primary btn-full btn-lg" onclick="verifyOTP()" style="margin-top:1.5rem;">
+          <button type="button" class="btn btn-primary btn-full btn-lg" onclick="verifyOTP()" style="margin-top:1.5rem;">
             <span>Verify &amp; Continue →</span>
           </button>
 
