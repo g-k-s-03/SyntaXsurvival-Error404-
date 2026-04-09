@@ -54,6 +54,12 @@
     }
     .blood-chip:hover { border-color: var(--border-red); color: var(--text); }
     .blood-chip.selected { background: rgba(200,16,46,0.12); border-color: var(--red-bright); color: var(--red-bright); }
+    button.blood-chip, button.urgency-opt {
+      font: inherit;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
 
     
     .units-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
@@ -112,32 +118,32 @@
   <div class="noise-overlay"></div>
 
   
-  <div class="modal-overlay" id="reqModal">
+  <div class="modal-overlay" id="reqModal" role="dialog" aria-modal="true" aria-labelledby="reqModalTitle">
     <div class="modal">
-      <button class="modal-close" onclick="closeModal()">✕</button>
-      <div class="modal-title">🩸 Request Blood</div>
+      <button type="button" class="modal-close" onclick="closeModal()" aria-label="Close blood request form">✕</button>
+      <div class="modal-title" id="reqModalTitle">🩸 Request blood (BloodBond)</div>
 
       <div class="form-group">
-        <label class="form-label">Blood Group <span class="req">*</span></label>
-        <div class="blood-select-row">
-          <div class="blood-chip" onclick="selBlood('A+')">A+</div>
-          <div class="blood-chip" onclick="selBlood('A-')">A−</div>
-          <div class="blood-chip" onclick="selBlood('B+')">B+</div>
-          <div class="blood-chip" onclick="selBlood('B-')">B−</div>
-          <div class="blood-chip" onclick="selBlood('AB+')">AB+</div>
-          <div class="blood-chip" onclick="selBlood('AB-')">AB−</div>
-          <div class="blood-chip" onclick="selBlood('O+')">O+</div>
-          <div class="blood-chip" onclick="selBlood('O-')">O−</div>
+        <label class="form-label" id="reqBloodLabel">Blood Group <span class="req">*</span></label>
+        <div class="blood-select-row" role="group" aria-labelledby="reqBloodLabel">
+          <button type="button" class="blood-chip" onclick="selBlood('A+')" aria-label="Blood group A positive" aria-pressed="false">A+</button>
+          <button type="button" class="blood-chip" onclick="selBlood('A-')" aria-label="Blood group A negative" aria-pressed="false">A−</button>
+          <button type="button" class="blood-chip" onclick="selBlood('B+')" aria-label="Blood group B positive" aria-pressed="false">B+</button>
+          <button type="button" class="blood-chip" onclick="selBlood('B-')" aria-label="Blood group B negative" aria-pressed="false">B−</button>
+          <button type="button" class="blood-chip" onclick="selBlood('AB+')" aria-label="Blood group AB positive" aria-pressed="false">AB+</button>
+          <button type="button" class="blood-chip" onclick="selBlood('AB-')" aria-label="Blood group AB negative" aria-pressed="false">AB−</button>
+          <button type="button" class="blood-chip" onclick="selBlood('O+')" aria-label="Blood group O positive" aria-pressed="false">O+</button>
+          <button type="button" class="blood-chip" onclick="selBlood('O-')" aria-label="Blood group O negative" aria-pressed="false">O−</button>
         </div>
         <input type="hidden" id="reqBlood" />
       </div>
 
       <div class="form-group">
-        <label class="form-label">Urgency Level <span class="req">*</span></label>
-        <div class="urgency-grid">
-          <div class="urgency-opt critical" onclick="selUrgency('critical', this)"><span>🚨</span>Critical</div>
-          <div class="urgency-opt urgent" onclick="selUrgency('urgent', this)"><span>⚠️</span>Urgent</div>
-          <div class="urgency-opt normal" onclick="selUrgency('normal', this)"><span>📋</span>Normal</div>
+        <label class="form-label" id="reqUrgencyLabel">Urgency Level <span class="req">*</span></label>
+        <div class="urgency-grid" role="group" aria-labelledby="reqUrgencyLabel">
+          <button type="button" class="urgency-opt critical" onclick="selUrgency('critical', this)" aria-pressed="false"><span aria-hidden="true">🚨</span>Critical</button>
+          <button type="button" class="urgency-opt urgent" onclick="selUrgency('urgent', this)" aria-pressed="false"><span aria-hidden="true">⚠️</span>Urgent</button>
+          <button type="button" class="urgency-opt normal" onclick="selUrgency('normal', this)" aria-pressed="false"><span aria-hidden="true">📋</span>Normal</button>
         </div>
         <input type="hidden" id="reqUrgency" />
       </div>
@@ -145,9 +151,9 @@
       <div class="form-group">
         <label class="form-label">Units Required <span class="req">*</span></label>
         <div class="units-row">
-          <button class="units-btn" onclick="changeUnits(-1)">−</button>
-          <div class="units-val" id="unitsVal">1</div>
-          <button class="units-btn" onclick="changeUnits(1)">+</button>
+          <button type="button" class="units-btn" onclick="changeUnits(-1)" aria-label="Decrease units">−</button>
+          <div class="units-val" id="unitsVal" aria-live="polite">1</div>
+          <button type="button" class="units-btn" onclick="changeUnits(1)" aria-label="Increase units">+</button>
           <span style="font-size:0.78rem;color:var(--text-muted);">unit(s) of blood</span>
         </div>
       </div>
@@ -155,13 +161,13 @@
       <div class="form-group">
         <label class="form-label">Location</label>
         <div style="display:flex;gap:8px;">
-          <input type="text" class="form-control" id="reqLoc" value="Kamla Raja Hospital, Lashkar" style="flex:1;" />
-          <button style="padding:0 14px;border-radius:var(--radius-sm);background:var(--ink-3);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-size:0.78rem;" onclick="document.getElementById('reqLoc').value='Auto-detected: Lashkar, Gwalior'">📍</button>
+          <input type="text" class="form-control" id="reqLoc" value="Kamla Raja Hospital, Lashkar" style="flex:1;" aria-label="Pickup or hospital location" />
+          <button type="button" style="padding:0 14px;border-radius:var(--radius-sm);background:var(--ink-3);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-size:0.78rem;" onclick="document.getElementById('reqLoc').value='Auto-detected: Lashkar, Gwalior'" aria-label="Use sample location">📍</button>
         </div>
       </div>
 
-      <button class="btn btn-primary btn-full" onclick="submitRequest()" style="margin-top:0.5rem;">
-        🚀 Submit Request — Alert Top 3 Donors
+      <button type="button" class="btn btn-primary btn-full" onclick="submitRequest()" style="margin-top:0.5rem;">
+        🚀 Submit request — alert matched donors
       </button>
     </div>
   </div>
@@ -172,8 +178,8 @@
       <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Bond</em></span></a>
       <div class="nav-right">
         <button type="button" class="theme-toggle" aria-label="Toggle theme">Light mode</button>
-        <button class="btn-nav" onclick="openModal()">+ Request Blood</button>
-        <button class="btn-nav-outline" onclick="logout()">Logout</button>
+        <button type="button" class="btn-nav" onclick="openModal()" aria-haspopup="dialog" aria-controls="reqModal">+ Request Blood</button>
+        <button type="button" class="btn-nav-outline" onclick="logout()">Logout</button>
       </div>
     </div>
   </header>
@@ -185,14 +191,14 @@
       <aside class="dash-sidebar">
         <div class="sidebar-section">
           <div class="sidebar-label">Hospital / Blood Bank</div>
-          <div class="sidebar-item active" onclick="showSection('active')"><span class="si-icon">📋</span> Active Requests</div>
-          <div class="sidebar-item" onclick="showSection('history')"><span class="si-icon">🗂</span> Request History</div>
-          <div class="sidebar-item" onclick="showSection('map')"><span class="si-icon">🗺</span> Map View</div>
+          <button type="button" class="sidebar-item active" data-section="active" onclick="showSection('active')"><span class="si-icon" aria-hidden="true">📋</span> Active Requests</button>
+          <button type="button" class="sidebar-item" data-section="history" onclick="showSection('history')"><span class="si-icon" aria-hidden="true">🗂</span> Request History</button>
+          <button type="button" class="sidebar-item" data-section="map" onclick="showSection('map')"><span class="si-icon" aria-hidden="true">🗺</span> Map View</button>
         </div>
         <div class="sidebar-section">
           <div class="sidebar-label">Quick</div>
-          <div class="sidebar-item" onclick="openModal()"><span class="si-icon">🩸</span> Request Blood</div>
-          <div class="sidebar-item" onclick="logout()"><span class="si-icon">🚪</span> Logout</div>
+          <button type="button" class="sidebar-item" onclick="openModal()" aria-haspopup="dialog" aria-controls="reqModal"><span class="si-icon" aria-hidden="true">🩸</span> Request Blood</button>
+          <button type="button" class="sidebar-item" onclick="logout()"><span class="si-icon" aria-hidden="true">🚪</span> Logout</button>
         </div>
       </aside>
 
@@ -227,7 +233,7 @@
 
           <div class="sect-head" data-reveal data-reveal-delay="1">
             <h3>Active Requests</h3>
-            <button class="btn btn-primary btn-sm" onclick="openModal()">+ New Request</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openModal()" aria-haspopup="dialog" aria-controls="reqModal">+ New Request</button>
           </div>
 
           
@@ -242,7 +248,7 @@
               </div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <span class="badge badge-critical">CRITICAL</span>
-                <button class="btn btn-ghost btn-sm" onclick="cancelReq(this)" style="color:var(--text-muted);">Cancel</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="cancelReq(this)" style="color:var(--text-muted);">Cancel</button>
               </div>
             </div>
 
@@ -309,8 +315,8 @@
               </div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <span class="badge badge-normal">NORMAL</span>
-                <button class="btn btn-ghost btn-sm" style="color:var(--green);" onclick="fulfillReq(this)">Mark Fulfilled</button>
-                <button class="btn btn-ghost btn-sm" onclick="cancelReq(this)" style="color:var(--text-muted);">Cancel</button>
+                <button type="button" class="btn btn-ghost btn-sm" style="color:var(--green);" onclick="fulfillReq(this)">Mark Fulfilled</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="cancelReq(this)" style="color:var(--text-muted);">Cancel</button>
               </div>
             </div>
             <div class="status-track">
@@ -375,15 +381,28 @@
     function selBlood(bg) {
       selBloodVal = bg;
       document.getElementById('reqBlood').value = bg;
-      document.querySelectorAll('.blood-chip').forEach(c => c.classList.remove('selected'));
-      [...document.querySelectorAll('.blood-chip')].find(c => c.textContent.replace('−','-') === bg || c.textContent === bg)?.classList.add('selected');
+      document.querySelectorAll('.blood-chip').forEach(c => {
+        c.classList.remove('selected');
+        c.setAttribute('aria-pressed', 'false');
+      });
+      const chosen = [...document.querySelectorAll('.blood-chip')].find(
+        c => c.textContent.replace('−', '-') === bg || c.textContent === bg
+      );
+      if (chosen) {
+        chosen.classList.add('selected');
+        chosen.setAttribute('aria-pressed', 'true');
+      }
     }
 
     function selUrgency(u, el) {
       selUrgencyVal = u;
       document.getElementById('reqUrgency').value = u;
-      document.querySelectorAll('.urgency-opt').forEach(o => o.classList.remove('selected'));
+      document.querySelectorAll('.urgency-opt').forEach(o => {
+        o.classList.remove('selected');
+        o.setAttribute('aria-pressed', 'false');
+      });
       el.classList.add('selected');
+      el.setAttribute('aria-pressed', 'true');
     }
 
     function changeUnits(d) {
@@ -413,9 +432,10 @@
 
     function showSection(id) {
       document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
-      document.getElementById('section-' + id).classList.add('active');
-      document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-      [...document.querySelectorAll('.sidebar-item')].find(s => s.textContent.toLowerCase().includes(id.slice(0,3)))?.classList.add('active');
+      const sec = document.getElementById('section-' + id);
+      if (sec) sec.classList.add('active');
+      document.querySelectorAll('.sidebar-item[data-section]').forEach(s => s.classList.remove('active'));
+      document.querySelector('.sidebar-item[data-section="' + id + '"]')?.classList.add('active');
     }
 
     

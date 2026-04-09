@@ -122,7 +122,8 @@
     
     .sect-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
     .sect-head h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); }
-    .sect-head a  { font-size: 0.78rem; color: var(--red-bright); }
+    .sect-head .sect-head-link { font-size: 0.78rem; color: var(--red-bright); text-decoration: none; }
+    .sect-head .sect-head-link:hover { text-decoration: underline; }
 
     
     .dash-section { display: none; }
@@ -145,7 +146,7 @@
         <span id="navStatus" style="font-size:0.78rem;color:var(--green);display:flex;align-items:center;gap:6px;">
           <span class="status-dot online"></span> Online
         </span>
-        <button class="btn-nav-outline" onclick="logout()">Logout</button>
+        <button type="button" class="btn-nav-outline" onclick="logout()">Logout</button>
       </div>
     </div>
   </header>
@@ -157,15 +158,15 @@
       <aside class="dash-sidebar">
         <div class="sidebar-section">
           <div class="sidebar-label">Donor</div>
-          <div class="sidebar-item active" onclick="showSection('overview')"><span class="si-icon">📊</span> Overview</div>
-          <div class="sidebar-item" onclick="showSection('alerts')"><span class="si-icon">🚨</span> Alerts <span id="alertBadge" style="margin-left:auto;background:var(--red);color:#fff;font-size:0.65rem;padding:1px 7px;border-radius:40px;font-family:var(--font-mono);">1</span></div>
-          <div class="sidebar-item" onclick="showSection('nearby')"><span class="si-icon">📍</span> Nearby Requests</div>
-          <div class="sidebar-item" onclick="showSection('history')"><span class="si-icon">📋</span> Donation History</div>
+          <button type="button" class="sidebar-item active" data-section="overview" onclick="showSection('overview')"><span class="si-icon" aria-hidden="true">📊</span> Overview</button>
+          <button type="button" class="sidebar-item" data-section="alerts" onclick="showSection('alerts')"><span class="si-icon" aria-hidden="true">🚨</span> Alerts <span id="alertBadge" style="margin-left:auto;background:var(--red);color:#fff;font-size:0.65rem;padding:1px 7px;border-radius:40px;font-family:var(--font-mono);">1</span></button>
+          <button type="button" class="sidebar-item" data-section="nearby" onclick="showSection('nearby')"><span class="si-icon" aria-hidden="true">📍</span> Nearby Requests</button>
+          <button type="button" class="sidebar-item" data-section="history" onclick="showSection('history')"><span class="si-icon" aria-hidden="true">📋</span> Donation History</button>
         </div>
         <div class="sidebar-section">
           <div class="sidebar-label">Account</div>
-          <div class="sidebar-item" onclick="showSection('settings')"><span class="si-icon">⚙️</span> Settings</div>
-          <div class="sidebar-item" onclick="logout()"><span class="si-icon">🚪</span> Logout</div>
+          <button type="button" class="sidebar-item" data-section="settings" onclick="showSection('settings')"><span class="si-icon" aria-hidden="true">⚙️</span> Settings</button>
+          <button type="button" class="sidebar-item" onclick="logout()"><span class="si-icon" aria-hidden="true">🚪</span> Logout</button>
         </div>
       </aside>
 
@@ -238,7 +239,7 @@
           
           <div class="sect-head">
             <h3>Nearby Requests</h3>
-            <a href="#" onclick="showSection('nearby')">View all →</a>
+            <button type="button" class="btn-link sect-head-link" onclick="showSection('nearby')">View all →</button>
           </div>
           <div class="nearby-list" id="nearbyList"></div>
         </div>
@@ -297,7 +298,7 @@
                 <option>Disabled</option>
               </select>
             </div>
-            <button class="btn btn-primary" onclick="toast('Settings saved!')">Save Changes</button>
+            <button type="button" class="btn btn-primary" onclick="toast('Settings saved!')">Save Changes</button>
           </div>
         </div>
 
@@ -324,9 +325,10 @@
     
     function showSection(id) {
       document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
-      document.getElementById('section-' + id).classList.add('active');
-      document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-      [...document.querySelectorAll('.sidebar-item')].find(s => s.textContent.toLowerCase().includes(id.slice(0,4)))?.classList.add('active');
+      const sec = document.getElementById('section-' + id);
+      if (sec) sec.classList.add('active');
+      document.querySelectorAll('.sidebar-item[data-section]').forEach(s => s.classList.remove('active'));
+      document.querySelector('.sidebar-item[data-section="' + id + '"]')?.classList.add('active');
       if (id === 'alerts') document.getElementById('alertBadge').style.display = 'none';
     }
 
@@ -435,8 +437,8 @@
             </div>
           </div>
           <div class="alert-actions">
-            <button class="btn-accept" onclick="acceptAlert('${req.id}')">✓ Accept</button>
-            <button class="btn-decline" onclick="declineAlert('${req.id}')">✕ Decline</button>
+            <button type="button" class="btn-accept" onclick="acceptAlert('${req.id}')">✓ Accept</button>
+            <button type="button" class="btn-decline" onclick="declineAlert('${req.id}')">✕ Decline</button>
           </div>
         </div>
       `;
@@ -444,18 +446,21 @@
 
     function renderNearbyRow(req) {
       const cls = (req.urgency || 'normal').toLowerCase();
+      const hn = hospName(req);
+      const ariaLabel = ('Blood request from ' + hn + ', ' + req.units + ' unit(s)')
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       return `
-        <div class="req-card ${cls}">
-          <div class="blood-pill">${(req.blood_group || '').replace('-', '−')}</div>
+        <button type="button" class="req-card ${cls}" aria-label="${ariaLabel}">
+          <div class="blood-pill" aria-hidden="true">${(req.blood_group || '').replace('-', '−')}</div>
           <div class="req-card-body">
-            <div class="req-card-title">${hospName(req)}</div>
+            <div class="req-card-title">${hn}</div>
             <div class="req-card-meta">
               <span>⏱ ${fmtAgo(req.created_at)}</span>
               <span>💉 ${req.units} unit</span>
             </div>
           </div>
           ${urgencyBadge(req.urgency)}
-        </div>
+        </button>
       `;
     }
 

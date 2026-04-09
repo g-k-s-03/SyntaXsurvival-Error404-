@@ -64,6 +64,12 @@
     .blood-opt.selected { background: rgba(200,16,46,0.12); border-color: var(--red-bright); color: var(--red-bright); }
     .blood-opt.universal { border-style: dashed; }
     .blood-opt.universal.selected { background: rgba(200,16,46,0.18); }
+    button.blood-opt {
+      -webkit-appearance: none;
+      appearance: none;
+      font: inherit;
+      margin: 0;
+    }
 
     
     .location-row { display: flex; gap: 10px; }
@@ -137,7 +143,7 @@
       <div class="reg-header" data-reveal>
         <p class="section-label">— Donor Registration</p>
         <h1 class="reg-title">Join the<br /><em>lifesaving network</em></h1>
-        <p class="reg-sub">Complete your profile in 3 quick steps</p>
+        <p class="reg-sub">BloodBond — complete your donor profile in 3 quick steps</p>
       </div>
 
       
@@ -183,11 +189,11 @@
           <label class="form-label">Location / Area <span class="req">*</span></label>
           <div class="location-row">
             <input type="text" class="form-control" id="floc" placeholder="Enter your location" />
-            <button class="locate-btn" onclick="autoLocate()">📍 Detect</button>
+            <button type="button" class="locate-btn" onclick="autoLocate()" aria-label="Detect location">📍 Detect</button>
           </div>
         </div>
         <div class="form-nav">
-          <button class="btn btn-primary" onclick="goStep(2)">Continue →</button>
+          <button type="button" class="btn btn-primary" onclick="goStep(2)">Continue →</button>
         </div>
       </div>
 
@@ -196,16 +202,16 @@
         <div class="form-section-title"><span>🩸</span> Blood Group &amp; Medical Info</div>
 
         <div class="form-group">
-          <label class="form-label">Blood Group <span class="req">*</span></label>
-          <div class="blood-grid">
-            <div class="blood-opt" onclick="selectBlood('A+')">A+</div>
-            <div class="blood-opt" onclick="selectBlood('A-')">A−</div>
-            <div class="blood-opt" onclick="selectBlood('B+')">B+</div>
-            <div class="blood-opt" onclick="selectBlood('B-')">B−</div>
-            <div class="blood-opt" onclick="selectBlood('AB+')">AB+</div>
-            <div class="blood-opt" onclick="selectBlood('AB-')">AB−</div>
-            <div class="blood-opt universal" onclick="selectBlood('O+')">O+</div>
-            <div class="blood-opt universal" onclick="selectBlood('O-')">O−</div>
+          <label class="form-label" id="bloodGroupLabel">Blood Group <span class="req">*</span></label>
+          <div class="blood-grid" role="group" aria-labelledby="bloodGroupLabel">
+            <button type="button" class="blood-opt" onclick="selectBlood('A+')" aria-label="Blood group A positive" aria-pressed="false">A+</button>
+            <button type="button" class="blood-opt" onclick="selectBlood('A-')" aria-label="Blood group A negative" aria-pressed="false">A−</button>
+            <button type="button" class="blood-opt" onclick="selectBlood('B+')" aria-label="Blood group B positive" aria-pressed="false">B+</button>
+            <button type="button" class="blood-opt" onclick="selectBlood('B-')" aria-label="Blood group B negative" aria-pressed="false">B−</button>
+            <button type="button" class="blood-opt" onclick="selectBlood('AB+')" aria-label="Blood group AB positive" aria-pressed="false">AB+</button>
+            <button type="button" class="blood-opt" onclick="selectBlood('AB-')" aria-label="Blood group AB negative" aria-pressed="false">AB−</button>
+            <button type="button" class="blood-opt universal" onclick="selectBlood('O+')" aria-label="Blood group O positive" aria-pressed="false">O+</button>
+            <button type="button" class="blood-opt universal" onclick="selectBlood('O-')" aria-label="Blood group O negative" aria-pressed="false">O−</button>
           </div>
           <input type="hidden" id="fblood" />
         </div>
@@ -227,8 +233,8 @@
         </div>
 
         <div class="form-nav">
-          <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
-          <button class="btn btn-primary" onclick="goStep(3)">Continue →</button>
+          <button type="button" class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+          <button type="button" class="btn btn-primary" onclick="goStep(3)">Continue →</button>
         </div>
       </div>
 
@@ -272,8 +278,8 @@
         </div>
 
         <div class="form-nav">
-          <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
-          <button class="btn btn-primary" onclick="submitRegistration()">
+          <button type="button" class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+          <button type="button" class="btn btn-primary" onclick="submitRegistration()">
             <span id="regBtnText">Create Account →</span>
           </button>
         </div>
@@ -352,8 +358,17 @@
     function selectBlood(bg) {
       selectedBlood = Auth.normalizeBloodGroup(bg);
       document.getElementById('fblood').value = selectedBlood;
-      document.querySelectorAll('.blood-opt').forEach(o => o.classList.remove('selected'));
-      [...document.querySelectorAll('.blood-opt')].find(o => o.textContent.replace('−', '-') === bg || o.textContent === bg)?.classList.add('selected');
+      document.querySelectorAll('.blood-opt').forEach(o => {
+        o.classList.remove('selected');
+        o.setAttribute('aria-pressed', 'false');
+      });
+      const chosen = [...document.querySelectorAll('.blood-opt')].find(
+        o => o.textContent.replace('−', '-') === bg || o.textContent === bg
+      );
+      if (chosen) {
+        chosen.classList.add('selected');
+        chosen.setAttribute('aria-pressed', 'true');
+      }
     }
 
     

@@ -53,7 +53,7 @@
       <div class="reg-header" data-reveal>
         <p class="section-label">— Hospital / Blood Bank Registration</p>
         <h1 class="reg-title">Register your<br /><em>hospital / blood bank</em></h1>
-        <p style="font-size:0.85rem;color:var(--text-muted);">Verified hospitals and blood banks can request blood and track donors in real time.</p>
+        <p style="font-size:0.85rem;color:var(--text-muted);">BloodBond — verified hospitals and blood banks can request blood and track donors in real time.</p>
       </div>
 
       <div class="form-section" data-reveal data-reveal-delay="1">
@@ -108,7 +108,7 @@
           <label class="form-label">GPS Location</label>
           <div class="location-row">
             <input type="text" class="form-control" id="hgps" placeholder="Auto-detect" readonly />
-            <button class="locate-btn" onclick="autoLocate()">📍 Detect GPS</button>
+            <button type="button" class="locate-btn" onclick="autoLocate()" aria-label="Detect GPS location">📍 Detect GPS</button>
           </div>
         </div>
 
@@ -118,7 +118,7 @@
         </div>
       </div>
 
-      <button class="btn btn-primary btn-full btn-lg" onclick="submitHospital()" data-reveal data-reveal-delay="3">
+      <button type="button" class="btn btn-primary btn-full btn-lg" onclick="submitHospital()" data-reveal data-reveal-delay="3">
         Register Hospital / Blood Bank →
       </button>
     </div>

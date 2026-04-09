@@ -41,8 +41,9 @@
   --border:      rgba(10, 20, 35, 0.12);
   --border-red:  rgba(200,16,46,0.24);
   --text:        #111827;
-  --text-muted:  #4b5563;
-  --text-dim:    #374151;
+  /* Stronger contrast for captions, labels, and small UI copy (WCAG-friendly on white) */
+  --text-muted:  #374151;
+  --text-dim:    #1f2937;
 }
 
 html { font-size: 16px; scroll-behavior: smooth; }
@@ -146,6 +147,70 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--red-bright);
   outline-offset: 2px;
+}
+
+.otp-input:focus-visible {
+  outline: 2px solid var(--red-bright);
+  outline-offset: 2px;
+}
+
+/* Sidebar nav: use <button> or <a> for keyboard access; match legacy .sidebar-item look */
+button.sidebar-item,
+a.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 20px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  border-right: 2px solid transparent;
+  background: transparent;
+  transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+}
+button.sidebar-item:hover,
+a.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+}
+:root[data-theme="light"] button.sidebar-item:hover,
+:root[data-theme="light"] a.sidebar-item:hover {
+  background: rgba(10, 20, 35, 0.04);
+}
+button.sidebar-item.active,
+a.sidebar-item.active {
+  background: rgba(200, 16, 46, 0.08);
+  color: var(--red-bright);
+  border-right-color: var(--red-bright);
+}
+
+/* Text buttons that look like links (e.g. “Change number”, “View all”) */
+.btn-link {
+  font: inherit;
+  font-size: inherit;
+  color: var(--red-bright);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+}
+.btn-link:hover {
+  color: var(--text);
+}
+
+/* Light theme: table row separators remain visible */
+:root[data-theme="light"] .dtable td,
+:root[data-theme="light"] .hist-table td {
+  border-bottom-color: var(--border);
 }
 
 
@@ -355,6 +420,7 @@ select.form-control { appearance: none; cursor: pointer; }
   cursor: pointer; transition: background 0.2s, color 0.2s; border-right: 2px solid transparent;
 }
 .sidebar-item:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+:root[data-theme="light"] div.sidebar-item:hover { background: rgba(10, 20, 35, 0.04); }
 .sidebar-item.active {
   background: rgba(200,16,46,0.08); color: var(--red-bright);
   border-right-color: var(--red-bright);
@@ -382,6 +448,12 @@ select.form-control { appearance: none; cursor: pointer; }
   border-radius: var(--radius); padding: 1.2rem 1.5rem;
   display: flex; align-items: center; gap: 1.2rem;
   transition: border-color 0.2s, box-shadow 0.2s; cursor: pointer;
+}
+button.req-card {
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
 }
 .req-card:hover { border-color: var(--border-red); box-shadow: 0 4px 20px rgba(200,16,46,0.1); }
 .req-card.critical { border-left: 3px solid var(--red-bright); }
