@@ -8,27 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
 
-  <!-- ============================================================
-    Commit 20: "feat: admin dashboard — city-wide stats and live request list"
-    Author: Person 5 (Pitch & Demo)
-    Date: Hour 29-31
-
-    Commit 21: "feat: blood shortage stats panel — which groups are critically low"
-    Author: Person 1 (Backend Lead)
-    Date: Hour 31
-
-    Commit 22: "feat: emergency broadcast panel — alert all donors in city"
-    Author: Person 4 (Notifications)
-    Date: Hour 31-32
-
-    Commit 23: "feat: donor management table — verify, suspend, search"
-    Author: Person 5 (Pitch & Demo)
-    Date: Hour 32-33
-
-    Commit 24: "feat: pre-seeded 50 dummy donors for demo"
-    Author: Person 2 (Frontend – Donor)
-    Date: Hour 29-31
-  ============================================================ -->
 
   <style>
     /* Shortage bars */
@@ -200,7 +179,7 @@
           </div>
         </div>
 
-        <!-- REQUESTS -->
+        
         <div class="dash-section" id="section-requests">
           <div class="sect-head"><h3>Live City Requests</h3></div>
           <div class="card">
@@ -222,7 +201,7 @@
           </div>
         </div>
 
-        <!-- DONOR MANAGEMENT (Commit 23 & 24) -->
+        
         <div class="dash-section" id="section-donors">
           <div class="sect-head"><h3>Donor Management</h3><span style="font-size:0.78rem;color:var(--text-muted);">50 total · 34 available</span></div>
           <div class="search-bar">
@@ -241,7 +220,7 @@
           </div>
         </div>
 
-        <!-- SHORTAGE STATS (Commit 21) -->
+        
         <div class="dash-section" id="section-shortage">
           <div class="sect-head"><h3>Blood Group Shortage</h3><span style="font-size:0.75rem;color:var(--text-muted);">Live · Gwalior City</span></div>
           <div class="shortage-grid" data-reveal>
@@ -256,7 +235,7 @@
           </div>
         </div>
 
-        <!-- EMERGENCY BROADCAST (Commit 22) -->
+        
         <div class="dash-section" id="section-broadcast">
           <div class="sect-head"><h3>Emergency Broadcast</h3></div>
           <div class="broadcast-card">
@@ -286,7 +265,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <script>
-    // Commit 24: 50 dummy donors seeded for demo
+   
     const dummyDonors = [
       {name:'Rahul Sharma',  blood:'O+',  area:'Lashkar',      status:'available', last:'Mar 12, 2026'},
       {name:'Priya Kumari',  blood:'O−',  area:'City Centre',  status:'available', last:'Jan 8, 2026'},
@@ -304,7 +283,7 @@
       {name:'Vikram Yadav',  blood:'O+',  area:'Padav',        status:'available', last:'Feb 1, 2026'},
       {name:'Anita Dubey',   blood:'A+',  area:'Lashkar',      status:'available', last:'Jan 5, 2026'},
     ];
-    // Generate 35 more for full 50
+    
     const extras = ['B+','A+','O+','AB+','B−','O+','A−','B+','O+','A+','O−','B+','A+','O+','AB+','B+','O+','A+','O+','B+','A+','O+','AB−','B+','O+','A+','O+','B+','A+','O+','A−','B+','O+','AB+','B+'];
     const eAreas = ['Lashkar','Morar','Thatipur','Hazira','Padav','City Centre','Gola Ka Mandir','Gwalior Fort'];
     for (let i = 0; i < 35; i++) {
@@ -335,7 +314,7 @@
       renderDonors(bg ? dummyDonors.filter(d => d.blood === bg || d.blood === bg.replace('−','-')) : dummyDonors);
     }
 
-    // Commit 22: broadcast
+    
     function sendBroadcast() {
       const msg = document.getElementById('broadcastMsg').value.trim();
       if (!msg) { toast('Enter broadcast message', 'error'); return; }

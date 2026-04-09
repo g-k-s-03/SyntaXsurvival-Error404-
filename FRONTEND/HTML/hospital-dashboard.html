@@ -8,20 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
 
-  <!-- ============================================================
-    Commit 14: "feat: hospital dashboard — active requests list + status tracker"
-    Author: Person 3 (Frontend – Maps)
-    Date: Hour 18-20
-
-    Commit 15: "feat: request blood form with urgency level and units"
-    Author: Person 3 (Frontend – Maps)
-    Date: Hour 20-21
-
-    Commit 16: "feat: real-time status tracker — Pending > Matched > Confirmed > Fulfilled"
-    Author: Person 1 (Backend Lead)
-    Date: Hour 21
-  ============================================================ -->
-
+ 
   <style>
     /* Request modal overlay */
     .modal-overlay {
@@ -58,7 +45,7 @@
     .urgency-opt.normal.selected   { border-color: var(--blue); background: rgba(59,130,246,0.1); color: var(--blue); }
     .urgency-opt:hover { border-color: var(--border-red); }
 
-    /* Blood group compact select */
+    
     .blood-select-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
     .blood-chip {
       padding: 6px 14px; border-radius: 40px;
@@ -69,7 +56,7 @@
     .blood-chip:hover { border-color: var(--border-red); color: var(--text); }
     .blood-chip.selected { background: rgba(200,16,46,0.12); border-color: var(--red-bright); color: var(--red-bright); }
 
-    /* Units slider */
+    
     .units-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
     .units-btn {
       width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
@@ -80,7 +67,7 @@
     .units-btn:hover { border-color: var(--border-red); }
     .units-val { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--text); min-width: 24px; text-align: center; }
 
-    /* Status tracker */
+    
     .status-track {
       display: flex; gap: 0; margin: 0.75rem 0; align-items: center;
     }
@@ -99,7 +86,7 @@
     .st-label { font-size: 0.65rem; color: var(--text-muted); }
     .st-line { flex: 1; height: 1px; background: var(--border); margin-top: -14px; z-index: -1; max-width: 40px; }
 
-    /* Donor matches */
+    
     .donor-match {
       display: flex; align-items: center; gap: 1rem;
       padding: 10px 12px; border-radius: var(--radius-sm);
@@ -125,7 +112,7 @@
 <body>
   <div class="noise-overlay"></div>
 
-  <!-- Request Modal -->
+  
   <div class="modal-overlay" id="reqModal">
     <div class="modal">
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -180,7 +167,7 @@
     </div>
   </div>
 
-  <!-- Nav -->
+ 
   <header class="nav">
     <div class="nav-inner">
       <a href="index.html" class="nav-logo"><span class="logo-drop">🩸</span><span>Blood<em>Bond</em></span></a>
@@ -194,7 +181,7 @@
   <div class="page">
     <div class="dash-layout">
 
-      <!-- Sidebar -->
+      
       <aside class="dash-sidebar">
         <div class="sidebar-section">
           <div class="sidebar-label">Hospital</div>
@@ -209,7 +196,7 @@
         </div>
       </aside>
 
-      <!-- Main -->
+      
       <main class="dash-main">
 
         <div class="stats-row" data-reveal>
@@ -235,7 +222,7 @@
           </div>
         </div>
 
-        <!-- ACTIVE REQUESTS (Commit 14) -->
+       
         <div class="dash-section active" id="section-active">
 
           <div class="sect-head" data-reveal data-reveal-delay="1">
@@ -243,7 +230,7 @@
             <button class="btn btn-primary btn-sm" onclick="openModal()">+ New Request</button>
           </div>
 
-          <!-- Request 1: Matched -->
+          
           <div class="card" style="margin-bottom:1.2rem;" data-reveal data-reveal-delay="1">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
               <div style="display:flex;align-items:center;gap:10px;">
@@ -259,7 +246,7 @@
               </div>
             </div>
 
-            <!-- Status tracker (Commit 16) -->
+            
             <div class="status-track">
               <div class="st-step"><div class="st-dot done">✓</div><div class="st-label">Submitted</div></div>
               <div class="st-line"></div>
@@ -310,7 +297,7 @@
             </div>
           </div>
 
-          <!-- Request 2: Pending -->
+         
           <div class="card" data-reveal data-reveal-delay="2">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
               <div style="display:flex;align-items:center;gap:10px;">
@@ -340,7 +327,7 @@
           </div>
         </div>
 
-        <!-- HISTORY -->
+        
         <div class="dash-section" id="section-history">
           <div class="sect-head"><h3>Request History</h3></div>
           <div class="card">
@@ -356,7 +343,7 @@
           </div>
         </div>
 
-        <!-- MAP VIEW -->
+        
         <div class="dash-section" id="section-map">
           <div class="sect-head"><h3>Donor Map View</h3></div>
           <a href="map.html" class="btn btn-primary" style="margin-bottom:1rem;display:inline-flex;">Open Full Map →</a>
@@ -374,7 +361,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <script>
-    // Commit 14 & 15 & 16: dashboard logic
+    
 
     let reqUnits = 1; let selUrgencyVal = ''; let selBloodVal = '';
 
@@ -427,7 +414,7 @@
       [...document.querySelectorAll('.sidebar-item')].find(s => s.textContent.toLowerCase().includes(id.slice(0,3)))?.classList.add('active');
     }
 
-    // Escalation timer
+    
     let secs = 138;
     setInterval(() => {
       secs = Math.max(0, secs - 1);

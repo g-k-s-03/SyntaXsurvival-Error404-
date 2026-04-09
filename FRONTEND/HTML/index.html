@@ -8,12 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../CSS/shared.css" />
 
-  <!-- ============================================================
-    Commit 1: "feat: add splash screen with logo and auto redirect"
-    Author: Person 2 (Frontend – Donor)
-    Date: Hour 1-2 of hackathon
-  ============================================================ -->
-
+  
   <style>
     body { cursor: none; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
 
@@ -38,7 +33,6 @@
       text-align: center; padding: 2rem;
     }
 
-    /* Animated blood drop logo */
     .splash-logo {
       width: 90px; height: 90px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
       background: linear-gradient(160deg, var(--red-bright), var(--red-dim));
@@ -76,7 +70,7 @@
       animation: fadeUp 0.8s 0.4s var(--ease-expo) both;
     }
 
-    /* Progress bar */
+    
     .splash-bar-wrap {
       width: 200px; height: 2px; background: var(--border); border-radius: 4px; overflow: hidden;
       animation: fadeUp 0.8s 0.6s var(--ease-expo) both;
@@ -103,7 +97,7 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Cursor */
+    
     .cursor { width: 10px; height: 10px; background: var(--red-bright); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); }
     .cursor-f { width: 32px; height: 32px; border: 1px solid rgba(200,16,46,0.4); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: left 0.12s, top 0.12s; }
     @media(pointer:coarse){ .cursor,.cursor-f { display:none; } body { cursor:auto; } }
@@ -135,7 +129,7 @@
   <p class="hackathon-badge">PS-17 · SyntaXsurvival · TechRhythm 2.0 · ITM Gwalior · April 2026</p>
 
   <script>
-    // Commit 1: splash auto-redirect logic
+    
     const bar = document.getElementById('bar');
     const msg = document.getElementById('loadMsg');
     const msgs = ['Initialising...', 'Connecting to Firebase...', 'Loading donor database...', 'Ready!'];
@@ -150,9 +144,9 @@
         clearInterval(interval);
         setTimeout(() => { window.location.href = 'login.html'; }, 400);
       }
-    }, 40); // ~2 seconds total
+    }, 40);
 
-    // Cursor
+   
     const cur = document.getElementById('cur');
     const curf = document.getElementById('curf');
     document.addEventListener('mousemove', e => {

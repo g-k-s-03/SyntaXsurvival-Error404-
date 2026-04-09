@@ -11,12 +11,20 @@
   <link rel="stylesheet" href="../CSS/landing.css" />
 </head>
 <body>
-  <header class="nav">
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-follower" id="cursorFollower"></div>
+
+  <div class="noise-overlay"></div>
+
+  <header class="nav" id="nav">
     <div class="nav-inner">
       <a href="index.html" class="nav-logo">
         <span class="logo-drop">🩸</span>
         <span>Life<em>Link</em></span>
       </a>
+      <button type="button" class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span>
+      </button>
       <div class="nav-right">
         <a href="login.html" class="btn-nav-outline">Login</a>
         <a href="role.html" class="btn-nav">Get Started</a>
@@ -24,34 +32,331 @@
     </div>
   </header>
 
-  <main class="minimal-landing page">
-    <section class="hero-minimal">
-      <p class="hero-kicker">Real-time emergency blood matching</p>
-      <h1>Find verified donors in minutes.</h1>
-      <p class="hero-sub">
-        One network for donors, hospitals, and admins. Register, verify your phone, and start saving lives.
-      </p>
-      <div class="hero-actions">
-        <a href="donor-register.html" class="btn btn-primary btn-lg">Register as Donor</a>
-        <a href="hospital-register.html" class="btn btn-secondary btn-lg">Register Hospital</a>
-      </div>
-    </section>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features" class="mobile-link" onclick="closeMobile()">Features</a>
+    <a href="#how" class="mobile-link" onclick="closeMobile()">How it Works</a>
+    <a href="#impact" class="mobile-link" onclick="closeMobile()">Impact</a>
+    <a href="role.html" class="mobile-link cta">Join Now →</a>
+  </div>
 
-    <section class="minimal-points">
-      <article class="point card">
-        <h3>Verified by OTP</h3>
-        <p>Every new account verifies phone number before access.</p>
-      </article>
-      <article class="point card">
-        <h3>Fast matching</h3>
-        <p>Compatible donors are surfaced by urgency and location.</p>
-      </article>
-      <article class="point card">
-        <h3>Simple workflow</h3>
-        <p>Register, verify, then continue to your role dashboard.</p>
-      </article>
-    </section>
-  </main>
+  <section class="hero" id="hero">
+
+    <div class="hero-grid"></div>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="ticker">
+      <div class="ticker-track" id="tickerTrack">
+        <span>🩸 O− needed · Kamla Raja · 0.8 km</span>
+        <span>✓ Match found · B+ · 4 min ago</span>
+        <span>🩸 A+ critical · City Hospital · 2.1 km</span>
+        <span>✓ Donor en route · O+ · Morar</span>
+        <span>🩸 AB− urgent · Apollo · 3.4 km</span>
+        <span>✓ Fulfilled · 12 donations today</span>
+        <span>🩸 O− needed · Kamla Raja · 0.8 km</span>
+        <span>✓ Match found · B+ · 4 min ago</span>
+        <span>🩸 A+ critical · City Hospital · 2.1 km</span>
+        <span>✓ Donor en route · O+ · Morar</span>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow" data-reveal>
+        <span class="eyebrow-dot"></span>
+        <span>Real-time Blood Matching — India</span>
+        <span class="eyebrow-live">LIVE</span>
+      </div>
+
+      <h1 class="hero-headline" data-reveal data-reveal-delay="1">
+        <span class="line-wrap"><span class="line">Every</span></span>
+        <span class="line-wrap accent-wrap"><span class="line accent-line">Second</span></span>
+        <span class="line-wrap"><span class="line">Counts.</span></span>
+      </h1>
+
+      <p class="hero-sub" data-reveal data-reveal-delay="2">
+        Connecting donors, hospitals &amp; blood banks in under<br />
+        <strong>3 minutes</strong> — verified, real-time, life-saving.
+      </p>
+
+      <div class="hero-actions" data-reveal data-reveal-delay="3">
+        <a href="donor-register.html" class="btn-hero-primary">
+          <span class="btn-icon">🩸</span>
+          <span>Become a Donor</span>
+          <span class="btn-arrow">→</span>
+        </a>
+        <a href="hospital-register.html" class="btn-hero-outline">
+          <span>Request Blood</span>
+        </a>
+      </div>
+
+      <div class="hero-trust" data-reveal data-reveal-delay="4">
+        <span class="trust-badge">🔒 OTP Verified</span>
+        <span class="trust-badge">📍 GPS Matching</span>
+        <span class="trust-badge">⚡ &lt;3 min Response</span>
+      </div>
+    </div>
+
+    <div class="hero-stats" data-reveal data-reveal-delay="6">
+      <div class="hstat">
+        <span class="hstat-val" data-count="50000">0</span>
+        <span class="hstat-suffix">+</span>
+        <span class="hstat-label">Verified Donors</span>
+      </div>
+      <div class="hstat-divider"></div>
+      <div class="hstat">
+        <span class="hstat-val" data-count="1200">0</span>
+        <span class="hstat-suffix">+</span>
+        <span class="hstat-label">Partner Hospitals</span>
+      </div>
+      <div class="hstat-divider"></div>
+      <div class="hstat">
+        <span class="hstat-val" data-count="25000">0</span>
+        <span class="hstat-suffix">+</span>
+        <span class="hstat-label">Lives Saved</span>
+      </div>
+      <div class="hstat-divider"></div>
+      <div class="hstat">
+        <span class="hstat-val" data-count="42">0</span>
+        <span class="hstat-suffix">s</span>
+        <span class="hstat-label">Avg Match Time</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="bg-marquee" aria-hidden="true">
+    <div class="bg-marquee-track">
+      <span>A+</span><span>O−</span><span>B+</span><span>AB+</span>
+      <span>A−</span><span>O+</span><span>B−</span><span>AB−</span>
+      <span>A+</span><span>O−</span><span>B+</span><span>AB+</span>
+      <span>A−</span><span>O+</span><span>B−</span><span>AB−</span>
+    </div>
+  </div>
+
+  <section class="features" id="features">
+    <div class="features-inner">
+      <div class="section-label" data-reveal>— What we do</div>
+      <h2 class="section-title" data-reveal data-reveal-delay="1">
+        Built for<br /><em>real emergencies</em>
+      </h2>
+
+      <div class="features-grid">
+
+        <div class="feat-card feat-large" data-reveal data-reveal-delay="1">
+          <div class="feat-icon-wrap">
+            <div class="feat-icon">⚡</div>
+          </div>
+          <h3>Instant Matching Engine</h3>
+          <p>Filters donors by blood group compatibility, GPS distance, 56-day lock and availability. Top 3 nearest donors alerted simultaneously via SMS — no app needed on donor side.</p>
+          <div class="feat-tag">Firebase Realtime DB</div>
+        </div>
+
+        <div class="feat-card" data-reveal data-reveal-delay="2">
+          <div class="feat-icon">📍</div>
+          <h3>Real Distance Routing</h3>
+          <p>Google Maps Distance Matrix API — actual travel time, not straight-line guessing.</p>
+          <div class="feat-tag">Maps API</div>
+        </div>
+
+        <div class="feat-card" data-reveal data-reveal-delay="3">
+          <div class="feat-icon">📲</div>
+          <h3>Works on Any Phone</h3>
+          <p>Twilio SMS alerts reach donors on basic feature phones — zero app install needed.</p>
+          <div class="feat-tag">Twilio SMS</div>
+        </div>
+
+        <div class="feat-card" data-reveal data-reveal-delay="2">
+          <div class="feat-icon">🔄</div>
+          <h3>Auto Escalation</h3>
+          <p>No response in 3 minutes? System auto-alerts the next 3 donors. Radius expands 5 → 10 → 20 km automatically.</p>
+          <div class="feat-tag">Smart Queue</div>
+        </div>
+
+        <div class="feat-card feat-large feat-dark" data-reveal data-reveal-delay="3">
+          <div class="compatibility-viz" aria-hidden="true">
+            <div class="compat-center">O−</div>
+            <div class="compat-ring">
+              <span style="--a:0deg">A+</span>
+              <span style="--a:45deg">A−</span>
+              <span style="--a:90deg">B+</span>
+              <span style="--a:135deg">B−</span>
+              <span style="--a:180deg">AB+</span>
+              <span style="--a:225deg">AB−</span>
+              <span style="--a:270deg">O+</span>
+              <span style="--a:315deg">O−</span>
+            </div>
+          </div>
+          <h3>Blood Compatibility Matrix</h3>
+          <p>Goes beyond exact matching — O− shown for all groups, AB+ receives from all. Most teams miss this. We don't.</p>
+          <div class="feat-tag">8 Blood Groups</div>
+        </div>
+
+        <div class="feat-card" data-reveal data-reveal-delay="4">
+          <div class="feat-icon">🔒</div>
+          <h3>Privacy First</h3>
+          <p>Donor exact location never shown — only area name like "Lashkar" visible to hospitals.</p>
+          <div class="feat-tag">Secure</div>
+        </div>
+
+        <div class="feat-card" data-reveal data-reveal-delay="5">
+          <div class="feat-icon">⏱</div>
+          <h3>56-Day Auto Lock</h3>
+          <p>System automatically disables donors after donation. No manual tracking needed.</p>
+          <div class="feat-tag">Medical Safety</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="how" id="how">
+    <div class="how-inner">
+      <div class="section-label" data-reveal>— The process</div>
+      <h2 class="section-title" data-reveal data-reveal-delay="1">
+        Blood found in<br /><em>under 3 minutes</em>
+      </h2>
+
+      <div class="steps">
+        <div class="step" data-reveal data-reveal-delay="1">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <h4>Hospital submits request</h4>
+            <p>Selects blood group, urgency level (Critical / Urgent / Normal), units and location. GPS auto-detects or entered manually.</p>
+          </div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step" data-reveal data-reveal-delay="2">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <h4>Matching engine fires</h4>
+            <p>Filters by blood compatibility, removes ineligible donors, calculates real travel distances, ranks by nearest first.</p>
+          </div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step" data-reveal data-reveal-delay="3">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <h4>Top 3 donors alerted</h4>
+            <p>Simultaneous SMS sent. Donor taps Accept or Decline. No response in 3 min — next batch auto-alerted.</p>
+          </div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step" data-reveal data-reveal-delay="4">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <h4>Donor confirmed &amp; arrives</h4>
+            <p>Hospital gets instant SMS confirmation. Donor navigates via Google Maps link. Case marked fulfilled. Donor locked 56 days.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="roles" id="roles">
+    <div class="roles-inner">
+      <div class="section-label" data-reveal>— Who uses it</div>
+      <h2 class="section-title" data-reveal data-reveal-delay="1">
+        Three roles.<br /><em>One mission.</em>
+      </h2>
+
+      <div class="roles-grid">
+        <a href="donor-register.html" class="role-card" data-reveal data-reveal-delay="1">
+          <div class="role-num">01</div>
+          <div class="role-icon-big">🩸</div>
+          <h3>Donor</h3>
+          <p>Register your blood group and location. Receive SMS alerts when blood is needed nearby. Accept or decline in one tap.</p>
+          <ul class="role-list">
+            <li>Availability toggle</li>
+            <li>Donation history</li>
+            <li>Verified donor badge</li>
+            <li>56-day auto eligibility</li>
+          </ul>
+          <span class="role-cta">Register as Donor →</span>
+        </a>
+
+        <a href="hospital-register.html" class="role-card role-card-mid" data-reveal data-reveal-delay="2">
+          <div class="role-num">02</div>
+          <div class="role-icon-big">🏥</div>
+          <h3>Hospital</h3>
+          <p>Submit emergency or scheduled requests. Track matching in real time. See donors pinned on Google Maps.</p>
+          <ul class="role-list">
+            <li>Emergency + scheduled requests</li>
+            <li>Real-time status tracker</li>
+            <li>Donor map view</li>
+            <li>Cancel &amp; fulfillment flow</li>
+          </ul>
+          <span class="role-cta">Register Hospital →</span>
+        </a>
+
+        <a href="admin.html" class="role-card" data-reveal data-reveal-delay="3">
+          <div class="role-num">03</div>
+          <div class="role-icon-big">⚙️</div>
+          <h3>Admin</h3>
+          <p>City-wide dashboard. Monitor all requests, manage donors, view shortage stats, broadcast emergency alerts.</p>
+          <ul class="role-list">
+            <li>Live city map</li>
+            <li>Donor heatmap</li>
+            <li>Blood shortage stats</li>
+            <li>Emergency broadcast</li>
+          </ul>
+          <span class="role-cta">Admin Panel →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="impact" id="impact">
+    <div class="impact-inner">
+      <div class="impact-text" data-reveal>
+        <div class="section-label">— Why it matters</div>
+        <h2 class="section-title">
+          Every 2 seconds<br />someone in India<br /><em>needs blood.</em>
+        </h2>
+        <p>Existing systems are fragmented, slow, and offline. LifeLink replaces phone calls and paper registers with a real-time platform that works on any device, any phone, anywhere.</p>
+        <a href="role.html" class="btn-hero-primary" style="margin-top:2rem;display:inline-flex;">
+          <span class="btn-icon">🩸</span>
+          <span>Join the Network</span>
+          <span class="btn-arrow">→</span>
+        </a>
+      </div>
+      <div class="impact-numbers" data-reveal data-reveal-delay="2">
+        <div class="impact-num">
+          <span class="in-val">4.2<span class="in-unit">m</span></span>
+          <span class="in-label">Average match time</span>
+        </div>
+        <div class="impact-num">
+          <span class="in-val">94<span class="in-unit">%</span></span>
+          <span class="in-label">Request success rate</span>
+        </div>
+        <div class="impact-num">
+          <span class="in-val">57</span>
+          <span class="in-label">Platform features</span>
+        </div>
+        <div class="impact-num">
+          <span class="in-val">0<span class="in-unit">₹</span></span>
+          <span class="in-label">Always free for donors</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-drop">🩸</span>
+        <span class="logo-text">Life<em>Link</em></span>
+      </div>
+      <p class="footer-tagline">Real-time blood matching. Every second counts.</p>
+      <p class="footer-meta">PS-17 · TechRhythm 2.0 · SyntaXsurvival · ITM University Gwalior · April 2026</p>
+      <div class="footer-links">
+        <a href="donor-dashboard.html">Donor Dashboard</a>
+        <a href="hospital-dashboard.html">Hospital Dashboard</a>
+        <a href="admin.html">Admin</a>
+        <a href="map.html">Map View</a>
+      </div>
+    </div>
+  </footer>
 
   <script src="../JS/shared-theme.js"></script>
   <script src="../JS/landing.js"></script>
