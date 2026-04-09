@@ -1,52 +1,41 @@
-(() => {
-  const storageKey = "bb_theme";
-  const root = document.documentElement;
+(function () {
+  var KEY = 'bc_theme';
+  var root = document.documentElement;
+
+  function getTheme() {
+    return localStorage.getItem(KEY) === 'light' ? 'light' : 'dark';
+  }
 
   function applyTheme(theme) {
-    root.setAttribute("data-theme", theme);
+    if (theme === 'light') {
+      root.setAttribute('data-theme', 'light');
+    } else {
+      root.removeAttribute('data-theme');
+    }
     try {
-      localStorage.setItem(storageKey, theme);
+      localStorage.setItem(KEY, theme);
     } catch (_) {}
+    syncToggleLabels();
   }
 
-  function getSavedTheme() {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved === "light" || saved === "dark") return saved;
-    } catch (_) {}
-    return "dark";
-  }
-
-  function ensureToggle() {
-    if (document.querySelector(".theme-toggle")) return;
-    const host = document.querySelector(".nav-right") || document.querySelector(".nav-inner");
-    if (!host) return;
-
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "theme-toggle";
-    btn.setAttribute("aria-label", "Toggle light and dark theme");
-
-    const render = () => {
-      const dark = root.getAttribute("data-theme") !== "light";
-      btn.textContent = dark ? "Light" : "Dark";
-      btn.setAttribute("title", dark ? "Switch to light mode" : "Switch to dark mode");
-    };
-
-    btn.addEventListener("click", () => {
-      const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-      applyTheme(next);
-      render();
+  function syncToggleLabels() {
+    var t = getTheme();
+    document.querySelectorAll('.theme-toggle').forEach(function (btn) {
+      btn.textContent = t === 'light' ? 'Dark mode' : 'Light mode';
+      btn.setAttribute('aria-pressed', t === 'light' ? 'true' : 'false');
     });
-
-    host.appendChild(btn);
-    render();
   }
 
-  applyTheme(getSavedTheme());
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", ensureToggle);
-  } else {
-    ensureToggle();
-  }
+  applyTheme(getTheme());
+
+  document.querySelectorAll('.theme-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      applyTheme(getTheme() === 'light' ? 'dark' : 'light');
+    });
+  });
+
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY) applyTheme(getTheme());
+  });
 })();
