@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -24,7 +26,13 @@ def list_donors(
     if blood_group:
         q = q.filter(DonorProfile.blood_group == blood_group)
     rows = q.all()
-    return [DonorPublic.model_validate(r) for r in rows]
+    today = date.today()
+    eligible_rows = [
+        r
+        for r in rows
+        if r.last_donation_date is None or (today - r.last_donation_date).days >= 56
+    ]
+    return [DonorPublic.model_validate(r) for r in eligible_rows]
 
 
 @router.get("/hospitals", response_model=list[HospitalPublic])
