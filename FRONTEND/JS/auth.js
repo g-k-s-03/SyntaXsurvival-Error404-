@@ -5,6 +5,8 @@
   var ROLE_KEY = 'bc_role';
   var USER_KEY = 'bc_user';
   var API_BASE_KEY = 'bc_api_base';
+  var OFFLINE_MODE_KEY = 'bc_offline_mode';
+  var OFFLINE_OTP_KEY = 'bc_offline_otp';
   var DEFAULT_API_BASE = 'http://localhost:8000/v1';
 
   function getApiBase() {
@@ -43,6 +45,11 @@
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(ROLE_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(OFFLINE_MODE_KEY);
+  }
+
+  function isOfflineMode() {
+    return localStorage.getItem(OFFLINE_MODE_KEY) === '1';
   }
 
   function roleHome(role) {
@@ -66,13 +73,27 @@
     options = options || {};
     var method = options.method || 'GET';
     var withAuth = options.withAuth !== false;
+    var timeoutMs = Number(options.timeoutMs || 12000);
     var headers = { 'Content-Type': 'application/json' };
     if (withAuth && getToken()) headers.Authorization = 'Bearer ' + getToken();
-    var res = await fetch(getApiBase() + path, {
-      method: method,
-      headers: headers,
-      body: options.body ? JSON.stringify(options.body) : undefined
-    });
+    var controller = new AbortController();
+    var timeout = setTimeout(function () { controller.abort(); }, timeoutMs);
+    var res;
+    try {
+      res = await fetch(getApiBase() + path, {
+        method: method,
+        headers: headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: controller.signal
+      });
+    } catch (err) {
+      var netErr = new Error('Network unavailable or too slow. Please retry.');
+      netErr.code = 'NETWORK';
+      netErr.cause = err;
+      throw netErr;
+    } finally {
+      clearTimeout(timeout);
+    }
     var data = {};
     try {
       data = await res.json();
@@ -86,6 +107,47 @@
 
   async function post(path, payload, withAuth) {
     return apiFetch(path, { method: 'POST', body: payload || {}, withAuth: withAuth });
+  }
+
+  function createOfflineOtpChallenge(phone) {
+    var code = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+    var expiresAt = Date.now() + (10 * 60 * 1000);
+    sessionStorage.setItem(OFFLINE_OTP_KEY, JSON.stringify({
+      phone: normalizePhone(phone),
+      code: code,
+      expiresAt: expiresAt
+    }));
+    return { code: code, expiresAt: expiresAt };
+  }
+
+  function verifyOfflineOtpChallenge(phone, code) {
+    var raw = sessionStorage.getItem(OFFLINE_OTP_KEY);
+    if (!raw) return false;
+    try {
+      var row = JSON.parse(raw);
+      if (!row || row.phone !== normalizePhone(phone)) return false;
+      if (Date.now() > Number(row.expiresAt || 0)) return false;
+      if (String(row.code || '') !== String(code || '')) return false;
+      sessionStorage.removeItem(OFFLINE_OTP_KEY);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function startOfflineSession(phone, role) {
+    var normalizedRole = String(role || '').trim();
+    var normalizedPhone = normalizePhone(phone);
+    var offlineUser = {
+      id: 'offline-' + normalizedPhone,
+      phone: normalizedPhone,
+      role: normalizedRole,
+      phone_verified: true,
+      offline_mode: true
+    };
+    saveSession('offline-token-' + Date.now(), offlineUser);
+    localStorage.setItem(OFFLINE_MODE_KEY, '1');
+    return offlineUser;
   }
 
   async function fetchMe() {
@@ -153,6 +215,10 @@
     fetchMe: fetchMe,
     enforceRole: enforceRole,
     syncPendingProfile: syncPendingProfile,
-    post: post
+    post: post,
+    isOfflineMode: isOfflineMode,
+    createOfflineOtpChallenge: createOfflineOtpChallenge,
+    verifyOfflineOtpChallenge: verifyOfflineOtpChallenge,
+    startOfflineSession: startOfflineSession
   };
 })(window);

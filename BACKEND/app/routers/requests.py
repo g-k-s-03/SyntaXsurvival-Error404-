@@ -1,11 +1,10 @@
 from datetime import date, datetime, timezone
-import math
-import re
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 
+from app.config import get_settings
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.donor_profile import DonorProfile
@@ -20,9 +19,11 @@ from app.schemas.request import (
     RequestCreateResponse,
     RequestPublic,
 )
+from app.utils.geofence import estimate_distance_km, is_within_geofence
 
 router = APIRouter(prefix="/requests", tags=["requests"])
 FIRST_WAVE_SIZE = 5
+settings = get_settings()
 COMPATIBILITY_MATRIX: dict[str, dict[str, float]] = {
     "O-": {"O-": 1.0},
     "O+": {"O+": 1.0, "O-": 0.95},
@@ -52,38 +53,6 @@ def _is_donor_eligible(profile: DonorProfile) -> bool:
     if profile.last_donation_date is None:
         return True
     return (date.today() - profile.last_donation_date).days >= 56
-
-
-def _extract_lat_lng(text: str) -> tuple[float, float] | None:
-    m = re.search(r"(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)", text)
-    if not m:
-        return None
-    try:
-        return float(m.group(1)), float(m.group(2))
-    except ValueError:
-        return None
-
-
-def _distance_km(a: tuple[float, float], b: tuple[float, float]) -> float:
-    lat1, lon1 = map(math.radians, a)
-    lat2, lon2 = map(math.radians, b)
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    h = (
-        math.sin(dlat / 2) ** 2
-        + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-    )
-    return 6371.0 * 2 * math.asin(min(1.0, math.sqrt(h)))
-
-
-def _estimate_distance_km(req_location: str, donor_area: str) -> float | None:
-    req_geo = _extract_lat_lng(req_location)
-    donor_geo = _extract_lat_lng(donor_area)
-    if req_geo and donor_geo:
-        return _distance_km(req_geo, donor_geo)
-    if donor_area.strip().lower() == req_location.strip().lower():
-        return 0.0
-    return None
 
 
 def _require_hospital(user: User) -> None:
@@ -131,6 +100,7 @@ def create_request(
     db: Session = Depends(get_db),
 ) -> RequestCreateResponse:
     _require_hospital(user)
+    geofence_km = body.geofence_km or settings.default_geofence_km
 
     now = datetime.now(timezone.utc)
     req = BloodRequest(
@@ -151,7 +121,16 @@ def create_request(
     candidates = db.query(DonorProfile).filter(
         DonorProfile.blood_group.in_(candidate_bloods)
     ).all()
-    eligible = [p for p in candidates if _is_donor_eligible(p)]
+    eligible = [
+        p
+        for p in candidates
+        if _is_donor_eligible(p)
+        and is_within_geofence(
+            center_location=body.location_text,
+            target_location=p.area_text,
+            radius_km=geofence_km,
+        )
+    ]
 
     ranked_rows: list[RequestMatch] = []
     if eligible:
@@ -162,7 +141,7 @@ def create_request(
             )
             if comp <= 0:
                 continue
-            dist = _estimate_distance_km(body.location_text, profile.area_text)
+            dist = estimate_distance_km(body.location_text, profile.area_text)
             distance_penalty = (dist * 2.0) if dist is not None else 20.0
             final = (comp * 100.0) - distance_penalty
             scored.append((profile, comp * 100.0, final, dist))

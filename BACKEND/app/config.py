@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     msg91_auth_key: str = ""
     msg91_template_id: str = ""
     msg91_sender_id: str = ""
+    default_geofence_km: float = 25.0
 
     @property
     def cors_origin_list(self) -> list[str]:

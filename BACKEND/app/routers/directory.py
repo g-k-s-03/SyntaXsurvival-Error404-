@@ -8,6 +8,7 @@ from app.models.donor_profile import DonorProfile
 from app.models.hospital_profile import HospitalProfile
 from app.models.user import User
 from app.schemas.profile import DonorPublic, HospitalPublic
+from app.utils.geofence import is_within_geofence
 
 router = APIRouter(tags=["directory"])
 
@@ -16,6 +17,8 @@ router = APIRouter(tags=["directory"])
 def list_donors(
     db: Session = Depends(get_db),
     blood_group: str | None = Query(None, max_length=5),
+    near: str | None = Query(None, max_length=300),
+    geofence_km: float = Query(25.0, gt=0, le=500),
 ) -> list[DonorPublic]:
     q = (
         db.query(DonorProfile)
@@ -32,6 +35,16 @@ def list_donors(
         for r in rows
         if r.last_donation_date is None or (today - r.last_donation_date).days >= 56
     ]
+    if near:
+        eligible_rows = [
+            r
+            for r in eligible_rows
+            if is_within_geofence(
+                center_location=near,
+                target_location=r.area_text,
+                radius_km=geofence_km,
+            )
+        ]
     return [DonorPublic.model_validate(r) for r in eligible_rows]
 
 

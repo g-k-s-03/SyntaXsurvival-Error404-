@@ -15,6 +15,7 @@ class RequestCreate(BaseModel):
     units: int = Field(..., ge=1, le=10)
     urgency: RequestUrgency
     location_text: str = Field(..., min_length=2, max_length=300)
+    geofence_km: float | None = Field(None, gt=0, le=500)
     notes: str | None = Field(None, max_length=500)
 
     @field_validator("blood_group")
