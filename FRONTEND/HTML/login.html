@@ -357,6 +357,25 @@
         const returning = localStorage.getItem('bc_role');
         if (verifyMode) {
           localStorage.setItem('bc_verified_phone', 'true');
+          if (targetRole === 'hospital') {
+            const pendingHospitalId = localStorage.getItem('bc_pending_hospital_id');
+            const pendingPhone = localStorage.getItem('bc_pending_phone') || '';
+            try {
+              const hospitals = JSON.parse(localStorage.getItem('bc_hospitals') || '[]');
+              if (Array.isArray(hospitals)) {
+                const updated = hospitals.map(h => {
+                  const idMatch = pendingHospitalId && String(h.id) === pendingHospitalId;
+                  const phoneMatch = pendingPhone && String(h.phone || '') === pendingPhone;
+                  if (idMatch || phoneMatch) return { ...h, verified: true };
+                  return h;
+                });
+                localStorage.setItem('bc_hospitals', JSON.stringify(updated));
+              }
+            } catch (e) {
+              // Ignore malformed local data in demo mode.
+            }
+          }
+          localStorage.removeItem('bc_pending_hospital_id');
           localStorage.removeItem('bc_pending_phone');
           if (targetRole === 'donor') window.location.href = 'donor-dashboard.html';
           else if (targetRole === 'hospital') window.location.href = 'hospital-dashboard.html';

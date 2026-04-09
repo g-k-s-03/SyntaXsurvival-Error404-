@@ -123,6 +123,36 @@
   <div class="toast-container" id="toasts"></div>
 
   <script>
+    function normalizeName(value) {
+      return value.toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function normalizePhone(value) {
+      return value.replace(/\D/g, '').slice(-10);
+    }
+
+    function getHospitals() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('bc_hospitals') || '[]');
+        return Array.isArray(saved) ? saved : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setHospitals(list) {
+      localStorage.setItem('bc_hospitals', JSON.stringify(list));
+    }
+
+    function alreadyRegisteredHospital(name, phone) {
+      const normalizedName = normalizeName(name);
+      const normalizedPhone = normalizePhone(phone);
+      return getHospitals().find(h =>
+        normalizeName(h.name || '') === normalizedName ||
+        normalizePhone(h.phone || '') === normalizedPhone
+      );
+    }
+
     
     function autoLocate() {
       const btn = document.querySelector('.locate-btn');
@@ -137,17 +167,34 @@
     function submitHospital() {
       const name = document.getElementById('hname').value.trim();
       const phone = document.getElementById('hphone').value.trim();
+      const pendingPhone = normalizePhone(phone);
       if (!name) { toast('Enter hospital name', 'error'); return; }
       if (!phone) { toast('Enter contact phone', 'error'); return; }
+      if (pendingPhone.length !== 10) { toast('Enter a valid 10-digit phone', 'error'); return; }
       if (!document.getElementById('hconsent').checked) { toast('Please confirm consent', 'error'); return; }
+      if (alreadyRegisteredHospital(name, phone)) {
+        toast('Hospital already registered. Please login/verify instead.', 'error');
+        return;
+      }
 
       const btn = document.querySelector('.btn-primary');
       btn.textContent = '⏳ Registering...'; btn.disabled = true;
       setTimeout(() => {
+        const hospitals = getHospitals();
+        const hospitalRecord = {
+          id: Date.now(),
+          name,
+          phone: pendingPhone,
+          verified: false
+        };
+        hospitals.push(hospitalRecord);
+        setHospitals(hospitals);
+
         localStorage.setItem('bc_role', 'hospital');
         localStorage.setItem('bc_hosp_name', name);
-        localStorage.setItem('bc_pending_phone', phone.replace(/\D/g, '').slice(-10));
-        toast('Hospital registered. Verify your phone to continue.');
+        localStorage.setItem('bc_pending_phone', pendingPhone);
+        localStorage.setItem('bc_pending_hospital_id', String(hospitalRecord.id));
+        toast('Hospital registered. Complete verification to activate account.');
         setTimeout(() => { window.location.href = 'login.html?mode=verify&role=hospital'; }, 1000);
       }, 1800);
     }
