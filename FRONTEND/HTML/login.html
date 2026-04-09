@@ -263,6 +263,7 @@
   
   <div class="toast-container" id="toasts"></div>
 
+  <script src="../JS/auth.js"></script>
   <script>
    
 
@@ -271,6 +272,7 @@
     const params = new URLSearchParams(window.location.search);
     const verifyMode = params.get('mode') === 'verify';
     const targetRole = params.get('role');
+    let currentPhone = '';
 
     function initMode() {
       if (!verifyMode) return;
@@ -294,22 +296,32 @@
       setTimeout(() => t.remove(), 3500);
     }
 
-    function sendOTP() {
-      const phone = document.getElementById('phoneInput').value.trim();
-      if (phone.length !== 10) { toast('Enter a valid 10-digit number', 'error'); return; }
+    async function sendOTP() {
+      const phone = (document.getElementById('phoneInput').value || '').replace(/\D/g, '').slice(-10);
+      if (!/^\d{10}$/.test(phone)) { toast('Enter a valid 10-digit number', 'error'); return; }
 
       const btn = document.getElementById('sendOtpBtn');
-      btn.classList.add('loading'); btn.disabled = true;
+      btn.classList.add('loading');
+      btn.disabled = true;
 
-      
-      setTimeout(() => {
-        btn.classList.remove('loading');
+      try {
+        const data = await Auth.post('/auth/otp/send', { phone: phone });
+        currentPhone = phone;
+        document.getElementById('phoneInput').value = phone;
         document.getElementById('phoneStep').style.display = 'none';
         document.getElementById('otpStep').classList.add('visible');
         toast('OTP sent to +91 ' + phone);
+        if (data && data.demo_otp) {
+          toast('Demo OTP: ' + data.demo_otp);
+        }
         startTimer();
         document.querySelector('.otp-input').focus();
-      }, 1400);
+      } catch (err) {
+        toast(err.message || 'Could not send OTP', 'error');
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
     }
 
     function startTimer() {
@@ -327,13 +339,26 @@
       }, 1000);
     }
 
-    function resendOTP() {
+    async function resendOTP() {
       document.getElementById('resendBtn').disabled = true;
-      toast('OTP resent!');
-      startTimer();
-      
-      document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
-      document.querySelector('.otp-input').focus();
+      try {
+        const phone = currentPhone || (document.getElementById('phoneInput').value || '').replace(/\D/g, '').slice(-10);
+        if (!/^\d{10}$/.test(phone)) {
+          toast('Enter phone number again', 'error');
+          changeNumber();
+          return;
+        }
+        const data = await Auth.post('/auth/otp/send', { phone: phone });
+        toast('OTP resent!');
+        if (data && data.demo_otp) {
+          toast('Demo OTP: ' + data.demo_otp);
+        }
+        startTimer();
+        document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+        document.querySelector('.otp-input').focus();
+      } catch (err) {
+        toast(err.message || 'Could not resend OTP', 'error');
+      }
     }
 
     function changeNumber() {
@@ -344,50 +369,46 @@
       document.getElementById('phoneInput').focus();
     }
 
-    function verifyOTP() {
+    async function verifyOTP() {
       const digits = [...document.querySelectorAll('.otp-input')].map(i => i.value).join('');
-      if (digits.length !== 6) { toast('Enter all 6 digits', 'error'); return; }
-     
-      if (digits !== '123456') { toast('Invalid OTP. Use 123456 for demo', 'error'); return; }
+      if (!/^\d{6}$/.test(digits)) { toast('Enter all 6 OTP digits', 'error'); return; }
 
-      clearInterval(timerInterval);
-      document.getElementById('verifiedCheck').classList.add('show');
-      toast('Phone verified! ✓');
-      
-      setTimeout(() => {
-        const returning = localStorage.getItem('bc_role');
-        if (verifyMode) {
-          localStorage.setItem('bc_verified_phone', 'true');
-          if (targetRole === 'hospital') {
-            const pendingHospitalId = localStorage.getItem('bc_pending_hospital_id');
-            const pendingPhone = localStorage.getItem('bc_pending_phone') || '';
-            try {
-              const hospitals = JSON.parse(localStorage.getItem('bc_hospitals') || '[]');
-              if (Array.isArray(hospitals)) {
-                const updated = hospitals.map(h => {
-                  const idMatch = pendingHospitalId && String(h.id) === pendingHospitalId;
-                  const phoneMatch = pendingPhone && String(h.phone || '') === pendingPhone;
-                  if (idMatch || phoneMatch) return { ...h, verified: true };
-                  return h;
-                });
-                localStorage.setItem('bc_hospitals', JSON.stringify(updated));
-              }
-            } catch (e) {
-              // Ignore malformed local data in demo mode.
-            }
-          }
-          localStorage.removeItem('bc_pending_hospital_id');
-          localStorage.removeItem('bc_pending_phone');
-          if (targetRole === 'donor') window.location.href = 'donor-dashboard.html';
-          else if (targetRole === 'hospital') window.location.href = 'hospital-dashboard.html';
-          else window.location.href = 'role.html';
-          return;
-        }
-        if (returning === 'donor')    window.location.href = 'donor-dashboard.html';
-        else if (returning === 'hospital') window.location.href = 'hospital-dashboard.html';
-        else if (returning === 'admin')    window.location.href = 'admin.html';
-        else window.location.href = 'role.html';
-      }, 1200);
+      const phone = currentPhone || (document.getElementById('phoneInput').value || '').replace(/\D/g, '').slice(-10);
+      if (!/^\d{10}$/.test(phone)) { toast('Invalid phone number', 'error'); return; }
+
+      const roleToVerify =
+        targetRole ||
+        localStorage.getItem('bc_pending_role') ||
+        localStorage.getItem('bc_role');
+
+      if (!roleToVerify) {
+        toast('Please select your role before verification', 'error');
+        setTimeout(() => { window.location.href = 'role.html'; }, 600);
+        return;
+      }
+
+      try {
+        const data = await Auth.post('/auth/otp/verify', {
+          phone: phone,
+          code: digits,
+          role: roleToVerify
+        });
+        Auth.saveSession(data.access_token, data.user);
+        clearInterval(timerInterval);
+        document.getElementById('verifiedCheck').classList.add('show');
+        toast('Phone verified! ✓');
+
+        localStorage.setItem('bc_verified_phone', 'true');
+        localStorage.removeItem('bc_pending_hospital_id');
+        localStorage.removeItem('bc_pending_phone');
+        localStorage.removeItem('bc_pending_role');
+
+        setTimeout(() => {
+          window.location.href = Auth.roleHome((data.user && data.user.role) || roleToVerify);
+        }, 800);
+      } catch (err) {
+        toast(err.message || 'OTP verification failed', 'error');
+      }
     }
 
   

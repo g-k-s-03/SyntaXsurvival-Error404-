@@ -122,7 +122,7 @@
     <div class="nav-inner">
       <a href="index.html" class="nav-logo">
         <span class="logo-drop">🩸</span>
-        <span>Blood<em>Connect</em></span>
+        <span>Blood<em>Bond</em></span>
       </a>
       <div class="nav-right">
         <button type="button" class="theme-toggle" aria-label="Toggle theme">Light mode</button>
@@ -310,16 +310,39 @@
       if (s === 1) {
         const name = document.getElementById('fname').value.trim();
         const age  = parseInt(document.getElementById('fage').value);
+        const phone = (document.getElementById('fphone').value || '').replace(/\D/g, '');
         const wt   = parseInt(document.getElementById('fweight').value);
         const loc  = document.getElementById('floc').value.trim();
         if (!name) { toast('Enter your full name', 'error'); return false; }
         if (!age || age < 18 || age > 65) { toast('Age must be between 18 and 65', 'error'); return false; }
+        if (phone.length !== 10) { toast('Enter a valid 10-digit phone number', 'error'); return false; }
         if (!wt || wt < 50) { toast('Minimum weight is 50kg to donate blood', 'error'); return false; }
         if (!loc) { toast('Enter your location/area', 'error'); return false; }
       }
       if (s === 2) {
         if (!selectedBlood) { toast('Please select your blood group', 'error'); return false; }
         if (!document.getElementById('fconsent').checked) { toast('Please give consent to continue', 'error'); return false; }
+        const val = document.getElementById('flastdon').value;
+        if (val) {
+          const last = new Date(val);
+          const diff = (Date.now() - last.getTime()) / (1000 * 60 * 60 * 24);
+          if (diff < 56) {
+            toast('Not eligible yet: 56-day lock is still active', 'error');
+            return false;
+          }
+        }
+      }
+      if (s === 3) {
+        const aadhaar = (document.getElementById('faad').value || '').trim();
+        const emergency = (document.getElementById('femerg').value || '').replace(/\D/g, '');
+        if (!/^\d{4}$/.test(aadhaar)) {
+          toast('Enter valid Aadhaar last 4 digits', 'error');
+          return false;
+        }
+        if (emergency.length !== 10) {
+          toast('Enter valid 10-digit emergency contact', 'error');
+          return false;
+        }
       }
       return true;
     }
@@ -367,9 +390,10 @@
       // Simulate Firebase save
       setTimeout(() => {
         localStorage.setItem('bc_role', 'donor');
+        localStorage.setItem('bc_pending_role', 'donor');
         localStorage.setItem('bc_donor_blood', selectedBlood || 'O+');
         localStorage.setItem('bc_donor_name', document.getElementById('fname').value || 'Rahul Sharma');
-        localStorage.setItem('bc_pending_phone', (document.getElementById('fphone').value || '').trim());
+        localStorage.setItem('bc_pending_phone', (document.getElementById('fphone').value || '').replace(/\D/g, '').slice(-10));
         toast('Account created. Verify your phone to continue.');
         setTimeout(() => { window.location.href = 'login.html?mode=verify&role=donor'; }, 1000);
       }, 1800);
