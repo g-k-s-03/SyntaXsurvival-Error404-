@@ -58,8 +58,6 @@ class RequestPublic(BaseModel):
 
     id: uuid.UUID
     hospital_user_id: uuid.UUID
-    hospital_facility_name: str | None = None
-    hospital_city: str | None = None
     blood_group: str
     units: int
     urgency: RequestUrgency
