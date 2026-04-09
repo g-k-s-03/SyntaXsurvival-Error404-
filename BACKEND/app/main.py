@@ -24,7 +24,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="BloodConnect API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="BloodBond API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

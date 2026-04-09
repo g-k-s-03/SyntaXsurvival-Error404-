@@ -360,7 +360,11 @@
 
   <div class="toast-container" id="toasts"></div>
 
+  <script src="../JS/auth.js"></script>
   <script>
+    if (!Auth.requireRole('hospital')) {
+      throw new Error('Unauthorized role for hospital dashboard');
+    }
     
 
     let reqUnits = 1; let selUrgencyVal = ''; let selBloodVal = '';
@@ -423,7 +427,7 @@
       if (el) el.textContent = m + ':' + String(s).padStart(2,'0');
     }, 1000);
 
-    function logout() { localStorage.removeItem('bc_role'); window.location.href = 'login.html'; }
+    function logout() { Auth.clearSession(); window.location.href = 'login.html'; }
 
     function toast(msg, type = 'success') {
       const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;

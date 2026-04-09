@@ -9,7 +9,7 @@ from urllib import error, request
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.models.otp_challenge import OtpChallenge
 from app.models.user import User, UserRole
 
@@ -119,7 +119,8 @@ def get_user_from_token(db: Session, settings: Settings, token: str) -> User | N
 def get_or_create_user(db: Session, phone: str, role: UserRole) -> User:
     user = db.query(User).filter(User.phone == phone).first()
     if user:
-        user.role = role
+        if user.role != role:
+            raise ValueError("Role mismatch for existing account")
         user.phone_verified = True
         db.commit()
         db.refresh(user)
