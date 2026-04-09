@@ -26,6 +26,19 @@
   --radius:      14px;
 }
 
+:root[data-theme="light"] {
+  --ink:         #f6f7fb;
+  --ink-2:       #ffffff;
+  --ink-3:       #f2f4f8;
+  --ink-4:       #e7ebf2;
+  --paper:       #ffffff;
+  --border:      rgba(10, 20, 35, 0.12);
+  --border-red:  rgba(200,16,46,0.24);
+  --text:        #111827;
+  --text-muted:  #6b7280;
+  --text-dim:    #4b5563;
+}
+
 html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
@@ -94,6 +107,9 @@ p  { color: var(--text-dim); line-height: 1.7; }
   backdrop-filter: blur(20px);
   box-shadow: 0 1px 0 var(--border);
   padding: 13px 0;
+}
+:root[data-theme="light"] .nav.scrolled {
+  background: rgba(255,255,255,0.92);
 }
 .nav-inner {
   max-width: 1200px; margin: 0 auto; padding: 0 32px;
@@ -707,7 +723,7 @@ a.role-card > p {
 .minimal-landing {
   max-width: 980px;
   margin: 0 auto;
-  padding: 4rem 1.5rem 5rem;
+  padding: 6rem 1.5rem 5rem;
 }
 
 .hero-minimal {
@@ -735,6 +751,11 @@ a.role-card > p {
   display: grid;
   gap: 0.9rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.minimal-points .point {
+  background: var(--ink-3);
+  border-color: var(--border);
 }
 
 @media (max-width: 800px) {
