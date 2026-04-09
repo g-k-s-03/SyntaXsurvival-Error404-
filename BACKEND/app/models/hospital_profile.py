@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,4 +36,4 @@ class HospitalProfile(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="hospital_profile")  # noqa: F821
+    user: Mapped["User"] = relationship("User", back_populates="hospital_profile")
